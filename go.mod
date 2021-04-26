@@ -16,4 +16,7 @@ module github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing
 
 go 1.16
 
-require google.golang.org/api v0.45.0
+require (
+	github.com/alexflint/go-arg v1.4.1
+	google.golang.org/api v0.45.0
+)

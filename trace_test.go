@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package traces_written
+package e2e_testing
 
 import (
 	"context"
@@ -26,10 +26,6 @@ const (
 	projectID        = "otel-starter-project"
 	expectedSpanName = "integration_test_span"
 )
-
-func TestMain(m *testing.M) {
-	m.Run()
-}
 
 func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 	cloudtraceService, err := cloudtrace.NewService(ctx)

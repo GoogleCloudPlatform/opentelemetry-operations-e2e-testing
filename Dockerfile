@@ -24,4 +24,4 @@ RUN apk --update add ca-certificates
 FROM scratch
 COPY --from=build /src/opentelemetry-operations-e2e-testing.test /opentelemetry-operations-e2e-testing.test
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-CMD ["/opentelemetry-operations-e2e-testing.test", "-test.v"]
+ENTRYPOINT ["/opentelemetry-operations-e2e-testing.test", "--gotestflags='-test.v'"]
