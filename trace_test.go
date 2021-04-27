@@ -22,11 +22,6 @@ import (
 	cloudtrace "google.golang.org/api/cloudtrace/v1"
 )
 
-const (
-	projectID        = "otel-starter-project"
-	expectedSpanName = "integration_test_span"
-)
-
 func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 	cloudtraceService, err := cloudtrace.NewService(ctx)
 	if err != nil {
@@ -43,13 +38,13 @@ func TestQueryRecentTraces(t *testing.T) {
 	cloudtraceService := newTraceService(t, ctx)
 	startTime, _ := time.Now().Add(time.Second * -30).MarshalText()
 
-	_, err := cloudtraceService.Projects.Traces.List(projectID).
+	res, err := cloudtraceService.Projects.Traces.List(args.ProjectID).
 		StartTime(string(startTime)).
 		View("COMPLETE").
 		PageSize(10).
 		Do()
 
 	if err != nil {
-		t.Fatalf("Failed to make request, %v", err)
+		t.Fatalf("Failed to make request, %v\nres %v\n", err, res)
 	}
 }

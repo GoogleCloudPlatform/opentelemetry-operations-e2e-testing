@@ -16,6 +16,7 @@ type LocalCmd struct {
 var args struct {
 	Local       *LocalCmd `arg:"subcommand:local"`
 	GoTestFlags string    `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
+	ProjectID   string    `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
 }
 
 func TestMain(m *testing.M) {
