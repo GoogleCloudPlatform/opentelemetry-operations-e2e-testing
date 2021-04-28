@@ -14,12 +14,14 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/docker/go-connections/nat"
 )
 
 type Cleanup func()
 
 type LocalCmd struct {
 	Image string `arg:"required" help:"docker container image to deploy and test"`
+	Port  string `default:"8000"`
 }
 
 var args struct {
@@ -68,10 +70,24 @@ func setupLocal(local *LocalCmd) (Cleanup, error) {
 	}
 
 	ctx := context.Background()
-	createdRes, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: local.Image,
-		// AttachStdout: true, AttachStderr: true,
-	}, nil, nil, nil, "")
+	createdRes, err := cli.ContainerCreate(
+		ctx,
+		&container.Config{
+			Image: local.Image,
+			Env:   []string{"PORT=" + local.Port},
+			ExposedPorts: nat.PortSet{
+				nat.Port(local.Port): struct{}{},
+			},
+		},
+		&container.HostConfig{PortBindings: nat.PortMap{
+			nat.Port(local.Port): []nat.PortBinding{
+				{HostIP: "0.0.0.0", HostPort: local.Port},
+			},
+		}},
+		nil,
+		nil,
+		"",
+	)
 	if err != nil {
 		return noopCleanup, err
 	}
@@ -92,24 +108,25 @@ func setupLocal(local *LocalCmd) (Cleanup, error) {
 	}
 
 	cleanup := func() {
-		fmt.Printf("Cleanup called, killing container ID %v\n", containerID)
-		defer removeContainer()
+		fmt.Printf("Stopping and removing container ID %v\n", containerID)
 		timeout := (time.Second * 15)
 		err = cli.ContainerStop(ctx, containerID, &timeout)
 		if err != nil {
 			panic(err)
 		}
+		removeContainer()
 	}
 
-	// read logs
+	// forward container logs to stdout/stderr
 	reader, err := cli.ContainerLogs(ctx, containerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true})
 	if err != nil {
 		return cleanup, err
 	}
 	go func() {
 		defer reader.Close()
-		written, err := stdcopy.StdCopy(os.Stdout, os.Stderr, reader)
-		fmt.Printf("Wrote %v, err = %v\n", written, err)
+		if _, err := stdcopy.StdCopy(os.Stdout, os.Stderr, reader); err != nil {
+			fmt.Fprintf(os.Stderr, "Error while reading logs, %v\n", err)
+		}
 	}()
 
 	return cleanup, err
