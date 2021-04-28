@@ -41,11 +41,14 @@ func TestMain(m *testing.M) {
 	os.Args = append([]string{os.Args[0]}, strings.Fields(args.GoTestFlags)...)
 	flag.Parse()
 
-	var err error
-	var cleanup Cleanup
+	var (
+		client  *Client
+		cleanup Cleanup
+		err     error
+	)
 	switch {
 	case args.Local != nil:
-		cleanup, err = setupLocal(args.Local)
+		client, cleanup, err = setupLocal(args.Local)
 	}
 
 	defer cleanup()
@@ -53,7 +56,10 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	time.Sleep(time.Second * 5)
+	// set global client
+	testServerClient = client
+
+	time.Sleep(time.Second * 2)
 
 	// Run tests
 	m.Run()
@@ -63,10 +69,10 @@ func TestMain(m *testing.M) {
  * Set up the instrumented test server for a local run by running in a docker
  * container on the local host
  */
-func setupLocal(local *LocalCmd) (Cleanup, error) {
+func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return noopCleanup, err
+		return nil, noopCleanup, err
 	}
 
 	ctx := context.Background()
@@ -89,7 +95,7 @@ func setupLocal(local *LocalCmd) (Cleanup, error) {
 		"",
 	)
 	if err != nil {
-		return noopCleanup, err
+		return nil, noopCleanup, err
 	}
 	if len(createdRes.Warnings) != 0 {
 		fmt.Printf("Started with warnings: %v", createdRes.Warnings)
@@ -104,7 +110,7 @@ func setupLocal(local *LocalCmd) (Cleanup, error) {
 
 	err = cli.ContainerStart(ctx, containerID, types.ContainerStartOptions{})
 	if err != nil {
-		return removeContainer, err
+		return nil, removeContainer, err
 	}
 
 	cleanup := func() {
@@ -120,7 +126,7 @@ func setupLocal(local *LocalCmd) (Cleanup, error) {
 	// forward container logs to stdout/stderr
 	reader, err := cli.ContainerLogs(ctx, containerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true})
 	if err != nil {
-		return cleanup, err
+		return nil, cleanup, err
 	}
 	go func() {
 		defer reader.Close()
@@ -129,7 +135,7 @@ func setupLocal(local *LocalCmd) (Cleanup, error) {
 		}
 	}()
 
-	return cleanup, err
+	return &Client{Address: "localhost:" + local.Port}, cleanup, err
 }
 
 func noopCleanup() {}

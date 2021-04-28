@@ -36,15 +36,22 @@ func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 func TestQueryRecentTraces(t *testing.T) {
 	ctx := context.Background()
 	cloudtraceService := newTraceService(t, ctx)
+
+	res, err := testServerClient.Get("/basicTrace")
+	if err != nil {
+		t.Fatalf("Couldn't call test server: %v", err)
+	}
+	defer res.Body.Close()
+
 	startTime, _ := time.Now().Add(time.Second * -30).MarshalText()
 
-	res, err := cloudtraceService.Projects.Traces.List(args.ProjectID).
+	gctRes, err := cloudtraceService.Projects.Traces.List(args.ProjectID).
 		StartTime(string(startTime)).
 		View("COMPLETE").
 		PageSize(10).
 		Do()
 
 	if err != nil {
-		t.Fatalf("Failed to make request, %v\nres %v\n", err, res)
+		t.Fatalf("Failed to make request, %v\nres %v\n", err, gctRes)
 	}
 }
