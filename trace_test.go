@@ -37,6 +37,32 @@ func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 	return cloudtraceService
 }
 
+func waitForHealth(t *testing.T, ctx context.Context) {
+	backoff, _ := retry.NewConstant(1 * time.Second)
+	backoff = retry.WithMaxDuration(time.Second*10, backoff)
+	err := retry.Do(ctx, backoff, func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, time.Millisecond*500)
+		defer cancel()
+
+		res, err := testServerClient.Get(ctx, "/health")
+		if err != nil {
+			t.Logf("Waiting for instrumented test server /health: %v", err)
+			return retry.RetryableError(err)
+		}
+		if res.StatusCode != 200 {
+			err = fmt.Errorf(
+				"Expected status code 200 from /health, got %v", res.StatusCode,
+			)
+			t.Logf("Waiting for instrumented test server /health: %v", err)
+			return retry.RetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("Error polling instrumented test server to respond to GET /health: %v", err)
+	}
+}
+
 /**
  * Just makes a request to ListTraces and asserts there was no error
  */
@@ -46,8 +72,12 @@ func TestQueryRecentTraces(t *testing.T) {
 	cloudtraceService := newTraceService(t, ctx)
 	testID := fmt.Sprint(rand.Uint64())
 
+	waitForHealth(t, ctx)
+
 	// Call test server
-	res, err := testServerClient.Post("/basicTrace", nil, WithTestID(testID))
+	reqCtx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+	res, err := testServerClient.Post(reqCtx, "/basicTrace", nil, WithTestID(testID))
 	if err != nil {
 		t.Fatalf("Couldn't call test server: %v", err)
 	}

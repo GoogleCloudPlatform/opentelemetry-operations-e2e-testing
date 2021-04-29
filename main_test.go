@@ -68,8 +68,6 @@ func TestMain(m *testing.M) {
 	// set global client
 	testServerClient = client
 
-	time.Sleep(time.Second * 2)
-
 	// Run tests
 	m.Run()
 }
