@@ -30,6 +30,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/sethvargo/go-retry v0.1.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	google.golang.org/api v0.45.0
 	gotest.tools/v3 v3.0.3 // indirect

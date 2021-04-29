@@ -16,11 +16,14 @@ package e2e_testing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"testing"
 	"time"
 
+	"github.com/sethvargo/go-retry"
 	cloudtrace "google.golang.org/api/cloudtrace/v1"
 )
 
@@ -58,19 +61,33 @@ func TestQueryRecentTraces(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't marshal time to text: %v", err)
 	}
-	fmt.Printf("startTime: %v\n", string(startTimeBytes))
-	gctRes, err := cloudtraceService.Projects.Traces.List(args.ProjectID).
-		StartTime(string(startTimeBytes)).
-		Filter(fmt.Sprintf("+test-id:%v", testID)).
-		View("COMPLETE").
-		PageSize(10).
-		Do()
+
+	var gctRes *cloudtrace.ListTracesResponse
+	backoff, _ := retry.NewConstant(1 * time.Second)
+	backoff = retry.WithMaxDuration(time.Second*10, backoff)
+	err = retry.Do(ctx, backoff, func(ctx context.Context) error {
+		gctRes, err = cloudtraceService.Projects.Traces.List(args.ProjectID).
+			StartTime(string(startTimeBytes)).
+			Filter(fmt.Sprintf("+test-id:%v", testID)).
+			View("COMPLETE").
+			PageSize(10).
+			Do()
+		if err != nil {
+			return retry.RetryableError(err)
+		}
+		if len(gctRes.Traces) == 0 {
+			err = errors.New("Got zero spans in trace")
+			t.Logf("Retrying ListSpans: %v", err)
+			return retry.RetryableError(err)
+		}
+		return nil
+	})
 
 	if err != nil {
 		t.Fatalf("Failed to list traces: %v", err)
 	}
-	if len(gctRes.Traces) == 0 {
-		t.Fatal("Got zero traces, expected 1")
+	if numTraces := len(gctRes.Traces); numTraces != 1 {
+		t.Fatalf("Got %v traces, expected 1", numTraces)
 	}
 	if len(gctRes.Traces[0].Spans) == 0 {
 		t.Fatalf("Got zero spans in trace %v", gctRes.Traces[0].TraceId)
@@ -88,15 +105,15 @@ func TestQueryRecentTraces(t *testing.T) {
 
 	labelCases := []struct {
 		expectKey string
-		expectVal string
+		expectRe  string
 	}{
 		{
 			expectKey: "g.co/agent",
-			expectVal: "opentelemetry-python 0.170; google-cloud-trace-exporter 0.170",
+			expectRe:  `opentelemetry-[\w-]+ [\d\.]+; [\w-]+ [\d\.]+`,
 		},
 		{
 			expectKey: TestID,
-			expectVal: testID,
+			expectRe:  regexp.QuoteMeta(testID),
 		},
 	}
 	for _, tc := range labelCases {
@@ -105,8 +122,9 @@ func TestQueryRecentTraces(t *testing.T) {
 			if !ok {
 				t.Fatalf(`Missing label "%v"`, tc.expectKey)
 			}
-			if val != tc.expectVal {
-				t.Fatalf(`For label key %v, expected "%v" but got "%v"`, tc.expectKey, tc.expectVal, val)
+			match, _ := regexp.MatchString(tc.expectRe, val)
+			if !match {
+				t.Fatalf(`For label key %v, value "%v" did not match regex "%v"`, tc.expectKey, val, tc.expectRe)
 			}
 		})
 	}
