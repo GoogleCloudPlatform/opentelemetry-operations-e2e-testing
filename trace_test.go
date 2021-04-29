@@ -154,7 +154,12 @@ func TestQueryRecentTraces(t *testing.T) {
 			}
 			match, _ := regexp.MatchString(tc.expectRe, val)
 			if !match {
-				t.Fatalf(`For label key %v, value "%v" did not match regex "%v"`, tc.expectKey, val, tc.expectRe)
+				t.Fatalf(
+					`For label key %v, value "%v" did not match regex "%v"`,
+					tc.expectKey,
+					val,
+					tc.expectRe,
+				)
 			}
 		})
 	}

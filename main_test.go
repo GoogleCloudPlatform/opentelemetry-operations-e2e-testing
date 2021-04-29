@@ -144,7 +144,11 @@ func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
 	}
 
 	// forward container logs to stdout/stderr
-	reader, err := cli.ContainerLogs(ctx, containerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true})
+	reader, err := cli.ContainerLogs(
+		ctx,
+		containerID,
+		types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true},
+	)
 	if err != nil {
 		return nil, cleanup, err
 	}
