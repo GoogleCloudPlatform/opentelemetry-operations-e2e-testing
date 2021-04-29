@@ -16,11 +16,15 @@ package e2e_testing
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
 	cloudtrace "google.golang.org/api/cloudtrace/v1"
 )
+
+const basicTraceSpanName string = "basicTrace"
 
 func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 	cloudtraceService, err := cloudtrace.NewService(ctx)
@@ -35,23 +39,75 @@ func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
  */
 func TestQueryRecentTraces(t *testing.T) {
 	ctx := context.Background()
+	startTime := time.Now().Add(time.Second * -5)
 	cloudtraceService := newTraceService(t, ctx)
+	testID := fmt.Sprint(rand.Uint64())
 
-	res, err := testServerClient.Get("/basicTrace")
+	// Call test server
+	res, err := testServerClient.Post("/basicTrace", nil, WithTestID(testID))
 	if err != nil {
 		t.Fatalf("Couldn't call test server: %v", err)
 	}
 	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		t.Fatalf("Expected response code 200, got %v", res.StatusCode)
+	}
 
-	startTime, _ := time.Now().Add(time.Second * -30).MarshalText()
-
+	// Assert response
+	startTimeBytes, err := startTime.MarshalText()
+	if err != nil {
+		t.Fatalf("Couldn't marshal time to text: %v", err)
+	}
+	fmt.Printf("startTime: %v\n", string(startTimeBytes))
 	gctRes, err := cloudtraceService.Projects.Traces.List(args.ProjectID).
-		StartTime(string(startTime)).
+		StartTime(string(startTimeBytes)).
+		Filter(fmt.Sprintf("+test-id:%v", testID)).
 		View("COMPLETE").
 		PageSize(10).
 		Do()
 
 	if err != nil {
-		t.Fatalf("Failed to make request, %v\nres %v\n", err, gctRes)
+		t.Fatalf("Failed to list traces: %v", err)
+	}
+	if len(gctRes.Traces) == 0 {
+		t.Fatal("Got zero traces, expected 1")
+	}
+	if len(gctRes.Traces[0].Spans) == 0 {
+		t.Fatalf("Got zero spans in trace %v", gctRes.Traces[0].TraceId)
+	}
+
+	span := gctRes.Traces[0].Spans[0]
+
+	if span.Name != basicTraceSpanName {
+		t.Fatalf(`Expected span name %v, got "%v"`, basicTraceSpanName, span.Name)
+	}
+
+	if numLabels := len(span.Labels); numLabels != 2 {
+		t.Fatalf("Expected exactly 2 labels, got %v", numLabels)
+	}
+
+	labelCases := []struct {
+		expectKey string
+		expectVal string
+	}{
+		{
+			expectKey: "g.co/agent",
+			expectVal: "opentelemetry-python 0.170; google-cloud-trace-exporter 0.170",
+		},
+		{
+			expectKey: TestID,
+			expectVal: testID,
+		},
+	}
+	for _, tc := range labelCases {
+		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {
+			val, ok := span.Labels[tc.expectKey]
+			if !ok {
+				t.Fatalf(`Missing label "%v"`, tc.expectKey)
+			}
+			if val != tc.expectVal {
+				t.Fatalf(`For label key %v, expected "%v" but got "%v"`, tc.expectKey, tc.expectVal, val)
+			}
+		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
@@ -32,6 +34,7 @@ var args struct {
 }
 
 func TestMain(m *testing.M) {
+	rand.Seed(time.Now().UnixNano())
 	p := arg.MustParse(&args)
 	if p.Subcommand() == nil {
 		p.Fail("missing command")
@@ -75,21 +78,32 @@ func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
 		return nil, noopCleanup, err
 	}
 
+	home, _ := os.UserHomeDir()
 	ctx := context.Background()
 	createdRes, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{
 			Image: local.Image,
-			Env:   []string{"PORT=" + local.Port},
+			Env:   []string{"PORT=" + local.Port, "PROJECT_ID=" + args.ProjectID},
 			ExposedPorts: nat.PortSet{
 				nat.Port(local.Port): struct{}{},
 			},
 		},
-		&container.HostConfig{PortBindings: nat.PortMap{
-			nat.Port(local.Port): []nat.PortBinding{
-				{HostIP: "0.0.0.0", HostPort: local.Port},
+		&container.HostConfig{
+			PortBindings: nat.PortMap{
+				nat.Port(local.Port): []nat.PortBinding{
+					{HostIP: "0.0.0.0", HostPort: local.Port},
+				},
 			},
-		}},
+			// This should only be needed locally, not in CI builds
+			Mounts: []mount.Mount{
+				{
+					Type:     mount.TypeBind,
+					Source:   fmt.Sprintf("%v/.config/gcloud", home),
+					Target:   "/root/.config/gcloud",
+					ReadOnly: true,
+				},
+			}},
 		nil,
 		nil,
 		"",
