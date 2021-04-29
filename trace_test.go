@@ -38,7 +38,7 @@ func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 }
 
 func waitForHealth(t *testing.T, ctx context.Context) {
-	backoff, _ := retry.NewConstant(1 * time.Second)
+	backoff, _ := retry.NewConstant(time.Millisecond * 500)
 	backoff = retry.WithMaxDuration(time.Second*10, backoff)
 	err := retry.Do(ctx, backoff, func(ctx context.Context) error {
 		ctx, cancel := context.WithTimeout(ctx, time.Millisecond*500)
