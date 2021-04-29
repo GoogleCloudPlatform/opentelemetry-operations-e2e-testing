@@ -24,6 +24,9 @@ type Cleanup func()
 type LocalCmd struct {
 	Image string `arg:"required" help:"docker container image to deploy and test"`
 	Port  string `default:"8000"`
+
+	// Needed when running without a metadata server for credentials
+	BindMountGcloud bool `arg:"--bind-mount-gcloud" default:"false" help:"if true, bind mount $HOME/.config/gcloud into the container"`
 }
 
 var args struct {
@@ -95,15 +98,21 @@ func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
 					{HostIP: "0.0.0.0", HostPort: local.Port},
 				},
 			},
-			// This should only be needed locally, not in CI builds
-			Mounts: []mount.Mount{
-				{
-					Type:     mount.TypeBind,
-					Source:   fmt.Sprintf("%v/.config/gcloud", home),
-					Target:   "/root/.config/gcloud",
-					ReadOnly: true,
-				},
-			}},
+			Mounts: func() []mount.Mount {
+				if local.BindMountGcloud {
+					return []mount.Mount{
+						{
+							Type:     mount.TypeBind,
+							Source:   fmt.Sprintf("%v/.config/gcloud", home),
+							Target:   "/root/.config/gcloud",
+							ReadOnly: true,
+						},
+					}
+				} else {
+					return nil
+				}
+			}(),
+		},
 		nil,
 		nil,
 		"",
