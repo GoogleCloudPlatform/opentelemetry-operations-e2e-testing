@@ -26,7 +26,10 @@ type LocalCmd struct {
 	Port  string `default:"8000"`
 
 	// Needed when running without a metadata server for credentials
-	BindMountGcloud bool `arg:"--bind-mount-gcloud" default:"false" help:"if true, bind mount $HOME/.config/gcloud into the container"`
+	BindMountGcloud string `arg:"--bind-mount-gcloud" help:"Optional path to gcloud directory to bind mount into the container"`
+
+	// May be needed when running this binary in a container
+	Network string `help:"Docker network to use when starting the container, optional"`
 }
 
 var args struct {
@@ -76,13 +79,13 @@ func TestMain(m *testing.M) {
  * container on the local host
  */
 func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
+	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, noopCleanup, err
 	}
+	cli.NegotiateAPIVersion(ctx)
 
-	home, _ := os.UserHomeDir()
-	ctx := context.Background()
 	createdRes, err := cli.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -93,17 +96,12 @@ func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
 			},
 		},
 		&container.HostConfig{
-			PortBindings: nat.PortMap{
-				nat.Port(local.Port): []nat.PortBinding{
-					{HostIP: "0.0.0.0", HostPort: local.Port},
-				},
-			},
 			Mounts: func() []mount.Mount {
-				if local.BindMountGcloud {
+				if local.BindMountGcloud != "" {
 					return []mount.Mount{
 						{
 							Type:     mount.TypeBind,
-							Source:   fmt.Sprintf("%v/.config/gcloud", home),
+							Source:   local.BindMountGcloud,
 							Target:   "/root/.config/gcloud",
 							ReadOnly: true,
 						},
@@ -112,6 +110,7 @@ func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
 					return nil
 				}
 			}(),
+			NetworkMode: container.NetworkMode(local.Network),
 		},
 		nil,
 		nil,
@@ -158,7 +157,21 @@ func setupLocal(local *LocalCmd) (*Client, Cleanup, error) {
 		}
 	}()
 
-	return &Client{Address: "localhost:" + local.Port}, cleanup, err
+	// Get IP address of the test server
+	inspectRes, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return nil, cleanup, err
+	}
+	networks := inspectRes.NetworkSettings.Networks
+	if len(networks) != 1 {
+		return nil, cleanup, fmt.Errorf("Expected only one network, instead got: %v", networks)
+	}
+	var address string
+	for _, v := range networks {
+		address = v.IPAddress
+	}
+
+	return &Client{Address: fmt.Sprintf("%v:%v", address, local.Port)}, cleanup, err
 }
 
 func noopCleanup() {}
