@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"regexp"
 	"testing"
 	"time"
@@ -38,27 +39,28 @@ func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 	return cloudtraceService
 }
 
-/**
- * Just makes a request to ListTraces and asserts there was no error
- */
-func TestQueryRecentTraces(t *testing.T) {
-	ctx := context.Background()
-	startTime := time.Now().Add(time.Second * -5)
-	cloudtraceService := newTraceService(t, ctx)
-	testID := fmt.Sprint(rand.Uint64())
-
-	// Call test server
-	reqCtx, cancel := context.WithTimeout(ctx, time.Second*5)
-	defer cancel()
-	res, err := testServerClient.Post(reqCtx, "/basicTrace", nil, testclient.WithTestID(testID))
+// Checks response code for the test server response and fatals or skips the
+// test if necessary.
+func checkTestScenarioResponse(t *testing.T, res *http.Response, err error) {
 	if err != nil {
-		t.Fatalf("Couldn't call test server: %v", err)
+		t.Fatalf("test server failed for %v %v: %v", res.Request.Method, res.Request.URL.Path, err)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		t.Fatalf("Expected response code 200, got %v", res.StatusCode)
+	switch res.StatusCode {
+	case 200:
+	case 404:
+		t.Skipf("test server does not support this scenario, skipping")
+	default:
+		t.Fatalf("got unexpected response code %v from test server", res.StatusCode)
 	}
+}
 
+func listTracesWithRetry(
+	ctx context.Context,
+	t *testing.T,
+	cloudtraceService *cloudtrace.Service,
+	startTime time.Time,
+	testID string,
+) *cloudtrace.ListTracesResponse {
 	// Assert response
 	startTimeBytes, err := startTime.MarshalText()
 	if err != nil {
@@ -89,6 +91,26 @@ func TestQueryRecentTraces(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to list traces: %v", err)
 	}
+	return gctRes
+}
+
+func TestBasicTrace(t *testing.T) {
+	ctx := context.Background()
+	startTime := time.Now().Add(time.Second * -5)
+	cloudtraceService := newTraceService(t, ctx)
+	testID := fmt.Sprint(rand.Uint64())
+
+	// Call test server
+	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+	res, err := testServerClient.Post(reqCtx, "/basicTrace", nil, testclient.WithTestID(testID))
+	if err == nil {
+		defer res.Body.Close()
+	}
+	checkTestScenarioResponse(t, res, err)
+
+	// Assert response
+	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
 	if numTraces := len(gctRes.Traces); numTraces != 1 {
 		t.Fatalf("Got %v traces, expected 1", numTraces)
 	}
