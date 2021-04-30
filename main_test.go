@@ -30,7 +30,7 @@ type LocalCmd struct {
 	Port  string `default:"8000"`
 
 	// Needed when running without a metadata server for credentials
-	BindMountGcloud string `arg:"--bind-mount-gcloud" help:"Optional path to gcloud directory to bind mount into the container"`
+	GoogleApplicationCredentials string `arg:"--google-application-credentials,env:GOOGLE_APPLICATION_CREDENTIALS" help:"Path to google credentials key file to mount into test server container"`
 
 	// May be needed when running this binary in a container
 	Network string `help:"Docker network to use when starting the container, optional"`
@@ -146,30 +146,29 @@ func createContainer(
 	local *LocalCmd,
 	logger *log.Logger,
 ) (container.ContainerCreateCreatedBody, error) {
+	env := []string{"PORT=" + local.Port, "PROJECT_ID=" + args.ProjectID}
+	mounts := []mount.Mount{}
+	if local.GoogleApplicationCredentials != "" {
+		env = append(env, "GOOGLE_APPLICATION_CREDENTIALS="+local.GoogleApplicationCredentials)
+		mounts = append(mounts, mount.Mount{
+			Type:     mount.TypeBind,
+			Source:   local.GoogleApplicationCredentials,
+			Target:   local.GoogleApplicationCredentials,
+			ReadOnly: true,
+		})
+
+	}
 	return cli.ContainerCreate(
 		ctx,
 		&container.Config{
 			Image: local.Image,
-			Env:   []string{"PORT=" + local.Port, "PROJECT_ID=" + args.ProjectID},
+			Env:   env,
 			ExposedPorts: nat.PortSet{
 				nat.Port(local.Port): struct{}{},
 			},
 		},
 		&container.HostConfig{
-			Mounts: func() []mount.Mount {
-				if local.BindMountGcloud != "" {
-					return []mount.Mount{
-						{
-							Type:     mount.TypeBind,
-							Source:   local.BindMountGcloud,
-							Target:   "/root/.config/gcloud",
-							ReadOnly: true,
-						},
-					}
-				} else {
-					return nil
-				}
-			}(),
+			Mounts:      mounts,
 			NetworkMode: container.NetworkMode(local.Network),
 		},
 		nil,
