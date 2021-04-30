@@ -160,3 +160,30 @@ func TestBasicTrace(t *testing.T) {
 		})
 	}
 }
+
+func TestComplexTrace(t *testing.T) {
+	ctx := context.Background()
+	startTime := time.Now().Add(time.Second * -5)
+	cloudtraceService := newTraceService(t, ctx)
+	testID := fmt.Sprint(rand.Uint64())
+
+	// Call test server
+	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+	res, err := testServerClient.Post(reqCtx, "/complexTrace", nil, testclient.WithTestID(testID))
+	if err == nil {
+		defer res.Body.Close()
+	}
+	checkTestScenarioResponse(t, res, err)
+
+	// Assert response
+	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
+	if numTraces := len(gctRes.Traces); numTraces != 1 {
+		t.Fatalf("Got %v traces, expected 1", numTraces)
+	}
+	if len(gctRes.Traces[0].Spans) == 4 {
+		t.Fatalf("Got zero spans in trace %v, expected 4", gctRes.Traces[0].TraceId)
+	}
+
+	// ... finish implementing
+}
