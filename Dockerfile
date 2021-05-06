@@ -13,8 +13,12 @@
 # limitations under the License.
 
 FROM golang:1.16 AS build
-
 WORKDIR /src
+
+# for faster builds 
+COPY go.mod go.sum ./
+RUN go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs go get
+
 COPY . .
 RUN CGO_ENABLED=0 go test -c
 
@@ -24,4 +28,5 @@ RUN apk --update add ca-certificates
 FROM scratch
 COPY --from=build /src/opentelemetry-operations-e2e-testing.test /opentelemetry-operations-e2e-testing.test
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=hashicorp/terraform:light /bin/terraform /bin/terraform
 ENTRYPOINT ["/opentelemetry-operations-e2e-testing.test", "--gotestflags=-test.v"]

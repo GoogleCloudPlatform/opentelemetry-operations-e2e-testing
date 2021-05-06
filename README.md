@@ -19,6 +19,7 @@ Run the image with a test server, e.g. with the python instrumented test server:
 GOOGLE_APPLICATION_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json
 
 docker run \
+    --tmpfs /tmp \
     -e GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS \
     -v "$GOOGLE_APPLICATION_CREDENTIALS:$GOOGLE_APPLICATION_CREDENTIALS:ro" \
     -v /var/run/docker.sock:/var/run/docker.sock \
