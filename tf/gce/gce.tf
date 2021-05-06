@@ -35,3 +35,12 @@ resource "google_compute_instance" "default" {
     }
   }
 }
+
+data "google_compute_instance" "foo" {
+  self_link = google_compute_instance.default.self_link
+}
+
+output "address" {
+  value = google_compute_instance.default.network_interface.0.network_ip
+  description = "The address of the http instrumented test server"
+}

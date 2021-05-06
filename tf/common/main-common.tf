@@ -33,18 +33,6 @@ terraform {
   }
 }
 
-data "terraform_remote_state" "gcs" {
-  backend = "gcs"
-  config = {
-    bucket  = "${var.project_id}-e2e-tfstate"
-    prefix  = "terraform/state"
-  }
-
-  defaults = {
-    gce_instance_keys = []
-  }
-}
-
 provider "google" {
   project = var.project_id
   region  = "us-central1"
