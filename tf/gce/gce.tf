@@ -14,19 +14,9 @@
 
 resource "google_compute_instance" "default" {
 
-  for_each = setsubtract(
-    # existing keys + key for this run
-    toset(
-      concat(
-        data.terraform_remote_state.gcs.outputs.gce_instance_keys,
-        [var.test_run_id]
-      )
-    ),
-    # remove the key for this run if we are destroying
-    toset(var.destroy_test_run ? [var.test_run_id] : [])
-  )
-
-  name         = "debian9-${each.key}"
+  # The terraform workspace will be given a random name (test run id) which we
+  # can use to get unique resource names.
+  name = "debian9-${terraform.workspace}"
   machine_type = "e2-micro"
 
   labels = local.common_labels

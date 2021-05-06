@@ -55,21 +55,6 @@ variable "project_id" {
   type = string
 }
 
-variable "test_run_id" {
-  type = string
-  description = "Random ID to used to partition resources created for a single test run. Gets concatenated to resource names."
-}
-
-variable "destroy_test_run" {
-  type = bool
-  description = "If true, destroys the resources associated with the passed test_run_id."
-  default = false
-}
-
-output "gce_instance_keys" {
-  value = keys(google_compute_instance.default)
-}
-
 locals {
   # Common labels to be assigned to all resources
   common_labels = {"otel-e2e-tests" = true}
