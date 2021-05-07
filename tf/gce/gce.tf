@@ -36,11 +36,13 @@ resource "google_compute_instance" "default" {
   }
 }
 
-data "google_compute_instance" "foo" {
-  self_link = google_compute_instance.default.self_link
+module "pubsub" {
+  source = "../modules/pubsub"
+
+  project_id = var.project_id
 }
 
-output "address" {
-  value = google_compute_instance.default.network_interface.0.network_ip
-  description = "The address of the http instrumented test server"
+output "pubsub_info" {
+  value = module.pubsub.info
+  description = "Info about the request/response pubsub topics and subscription to use in the test"
 }
