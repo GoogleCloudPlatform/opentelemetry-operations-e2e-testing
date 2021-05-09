@@ -17,6 +17,7 @@ package e2e_testing
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 )
@@ -35,6 +36,9 @@ func setupGke(
 
 	// TODO: map output to hostname
 	address := tfApplyOutput
+
+	// TODO remove
+	os.Exit(1)
 
 	return testclient.New(address), cleanup, error
 }
