@@ -77,7 +77,7 @@ func TestMain(m *testing.M) {
 
 	// wait for instrumented test server to be healthy
 	logger.Println("Waiting for health check on pub/sub channel")
-	cctx, cancel := context.WithTimeout(ctx, time.Second*15)
+	cctx, cancel := context.WithTimeout(ctx, time.Minute*2)
 	defer cancel()
 	err = testServerClient.WaitForHealth(cctx, logger)
 	if err != nil {

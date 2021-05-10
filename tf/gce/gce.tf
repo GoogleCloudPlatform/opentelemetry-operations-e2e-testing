@@ -16,15 +16,24 @@ resource "google_compute_instance" "default" {
 
   # The terraform workspace will be given a random name (test run id) which we
   # can use to get unique resource names.
-  name = "debian9-${terraform.workspace}"
+  name = "ops-test-${terraform.workspace}"
   machine_type = "e2-micro"
+  allow_stopping_for_update = true
 
-  labels = local.common_labels
+  labels = merge(
+    local.common_labels,
+    {container-vm = module.gce_container.vm_container_label},
+  )
 
   boot_disk {
     initialize_params {
-      image = "debian-cloud/debian-9"
+      image = module.gce_container.source_image
     }
+  }
+
+  metadata = {
+    gce-container-declaration = module.gce_container.metadata_value
+    google-logging-enabled    = "true"
   }
 
   network_interface {
@@ -34,12 +43,44 @@ resource "google_compute_instance" "default" {
       // Ephemeral IP
     }
   }
+
+  service_account {
+     scopes = ["cloud-platform"]
+  }
+}
+
+module "gce_container" {
+  source  = "terraform-google-modules/container-vm/google"
+  version = "2.0.0"
+
+  container = {
+    image = var.image
+
+    env =[
+      {
+        name = "PROJECT_ID"
+        value = var.project_id
+      },
+      {
+        name = "REQUEST_SUBSCRIPTION_NAME"
+        value = module.pubsub.info.request_topic.subscription_name
+      },
+      {
+        name = "RESPONSE_TOPIC_NAME"
+        value = module.pubsub.info.response_topic.topic_name
+      },
+    ]
+  }
 }
 
 module "pubsub" {
   source = "../modules/pubsub"
 
   project_id = var.project_id
+}
+
+variable "image" {
+  type = string
 }
 
 output "pubsub_info" {

@@ -37,7 +37,9 @@ func SetupGke(
 		args.ProjectID,
 		args.TestRunID,
 		gkeTfDir,
-		map[string]string{},
+		map[string]string{
+			"image": args.Gke.Image,
+		},
 		logger,
 	)
 	if err != nil {
