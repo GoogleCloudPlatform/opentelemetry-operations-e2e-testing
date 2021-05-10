@@ -19,6 +19,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 )
 
@@ -27,18 +28,26 @@ const gkeTfDir string = "tf/gce"
 // Set up the instrumented test server to run in GKE. Creates a new GKE cluster
 // and runs the specified container image in a pod. The returned cleanup
 // function tears down the whole cluster.
-func setupGke(
+func SetupGke(
 	ctx context.Context,
 	args *Args,
 	logger *log.Logger,
 ) (*testclient.Client, Cleanup, error) {
-	tfApplyOutput, cleanup, error := setupTf(ctx, gkeTfDir, args, logger)
-
-	// TODO: map output to hostname
-	address := tfApplyOutput
+	pubsubInfo, cleanup, err := setuptf.SetupTf(
+		ctx,
+		args.ProjectID,
+		args.TestRunID,
+		gkeTfDir,
+		map[string]string{},
+		logger,
+	)
 
 	// TODO remove
 	os.Exit(1)
 
-	return testclient.New(address), cleanup, error
+	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)
+	if err != nil {
+		return nil, cleanup, err
+	}
+	return client, cleanup, err
 }

@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"regexp"
 	"testing"
 	"time"
@@ -41,16 +40,16 @@ func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 
 // Checks response code for the test server response and fatals or skips the
 // test if necessary.
-func checkTestScenarioResponse(t *testing.T, res *http.Response, err error) {
+func checkTestScenarioResponse(t *testing.T, scenario string, res *testclient.Response, err error) {
 	if err != nil {
-		t.Fatalf("test server failed for %v %v: %v", res.Request.Method, res.Request.URL.Path, err)
+		t.Fatalf("test server failed for scenario %v: %v", scenario, err)
 	}
-	switch res.StatusCode {
-	case 200:
-	case 404:
+	switch res.Status {
+	case "200":
+	case "404":
 		t.Skipf("test server does not support this scenario, skipping")
 	default:
-		t.Fatalf("got unexpected response code %v from test server", res.StatusCode)
+		t.Fatalf(`got unexpected response code "%v" from test server`, res.Status)
 	}
 }
 
@@ -96,6 +95,7 @@ func listTracesWithRetry(
 
 func TestBasicTrace(t *testing.T) {
 	ctx := context.Background()
+	scenario := "/basicTrace"
 	startTime := time.Now().Add(time.Second * -5)
 	cloudtraceService := newTraceService(t, ctx)
 	testID := fmt.Sprint(rand.Uint64())
@@ -103,11 +103,8 @@ func TestBasicTrace(t *testing.T) {
 	// Call test server
 	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	res, err := testServerClient.Post(reqCtx, "/basicTrace", nil, testclient.WithTestID(testID))
-	if err == nil {
-		defer res.Body.Close()
-	}
-	checkTestScenarioResponse(t, res, err)
+	res, err := testServerClient.Request(reqCtx, testclient.Request{Scenario: scenario, TestID: testID})
+	checkTestScenarioResponse(t, scenario, res, err)
 
 	// Assert response
 	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
@@ -163,6 +160,7 @@ func TestBasicTrace(t *testing.T) {
 
 func TestComplexTrace(t *testing.T) {
 	ctx := context.Background()
+	scenario := "/complexTrace"
 	startTime := time.Now().Add(time.Second * -5)
 	cloudtraceService := newTraceService(t, ctx)
 	testID := fmt.Sprint(rand.Uint64())
@@ -170,11 +168,8 @@ func TestComplexTrace(t *testing.T) {
 	// Call test server
 	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	res, err := testServerClient.Post(reqCtx, "/complexTrace", nil, testclient.WithTestID(testID))
-	if err == nil {
-		defer res.Body.Close()
-	}
-	checkTestScenarioResponse(t, res, err)
+	res, err := testServerClient.Request(reqCtx, testclient.Request{Scenario: scenario, TestID: testID})
+	checkTestScenarioResponse(t, scenario, res, err)
 
 	// Assert response
 	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)

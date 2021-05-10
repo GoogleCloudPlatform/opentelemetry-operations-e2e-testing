@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+package setuptf
 
 import (
 	"context"
@@ -23,14 +23,20 @@ import (
 	"os/exec"
 )
 
-type tfVar struct {
-	Sensitive bool   `json:"sensitive"`
-	Type      string `json:"type"`
-	Value     string `json:"value"`
+type tfOutput struct {
+	PubsubInfoWrapper struct {
+		Value PubsubInfo `json:"value"`
+	} `json:"pubsub_info"`
 }
 
-type tfOutput struct {
-	Address tfVar `json:"address"`
+type TopicInfo struct {
+	TopicName        string `json:"topic_name"`
+	SubscriptionName string `json:"subscription_name"`
+}
+
+type PubsubInfo struct {
+	RequestTopic  TopicInfo `json:"request_topic"`
+	ResponseTopic TopicInfo `json:"response_topic"`
 }
 
 func runWithOutput(cmd *exec.Cmd, logger *log.Logger) error {
@@ -45,7 +51,8 @@ func runWithOutput(cmd *exec.Cmd, logger *log.Logger) error {
 }
 
 // Runs the sequence of terraform commands most environemnts need, returns the
-// output string and a cleanup function to teardown the created resources.
+// output bytes of `terraform output -json` and a cleanup function to teardown
+// the created resources.
 //
 // 1. Run terraform init
 // 2. Create a new terraform workspace for the test run ID
@@ -53,38 +60,41 @@ func runWithOutput(cmd *exec.Cmd, logger *log.Logger) error {
 // 4. Get output results from terraform output
 //
 // Cleanup method runs terraform destroy and then deletes the workspace.
-func setupTf(
+func SetupTf(
 	ctx context.Context,
+	projectID string,
+	testRunID string,
 	tfDir string, // the Dir to set when running terraform commands in e.g. tf/gke
-	args *Args,
+	tfVars map[string]string, // key-values for terraform input vars to send to terraform
 	logger *log.Logger,
-) (string, Cleanup, error) {
+) (*PubsubInfo, func(), error) {
+	tfVarArgs := tfVarMapToArgs(projectID, tfVars)
 	// Run terraform init just in case
 	cmd := exec.CommandContext(
 		ctx,
 		"terraform",
 		"init",
-		fmt.Sprintf("-backend-config=bucket=%v-e2e-tfstate", args.ProjectID),
-		fmt.Sprintf("-var=project_id=%v", args.ProjectID),
 		"-input=false",
+		fmt.Sprintf("-backend-config=bucket=%v-e2e-tfstate", projectID),
 	)
+	cmd.Args = append(cmd.Args, tfVarArgs...)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
-		return "", noopCleanup, err
+		return nil, func() {}, err
 	}
 
 	cleanup := func() {
-		defer deleteWorkspace(ctx, tfDir, args, logger)
+		defer deleteWorkspace(ctx, testRunID, tfDir, logger)
 
 		// Run terraform destroy
 		cmd = exec.CommandContext(
 			ctx,
 			"terraform",
 			"destroy",
-			fmt.Sprintf("-var=project_id=%v", args.ProjectID),
 			"-input=false",
 			"-auto-approve",
 		)
+		cmd.Args = append(cmd.Args, tfVarArgs...)
 		cmd.Dir = tfDir
 		if err := runWithOutput(cmd, logger); err != nil {
 			panic(err)
@@ -92,15 +102,15 @@ func setupTf(
 	}
 
 	// Create new terraform workspace
-	cmd = exec.CommandContext(ctx, "terraform", "workspace", "new", args.TestRunID)
+	cmd = exec.CommandContext(ctx, "terraform", "workspace", "new", testRunID)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
 		// try to switch to workspace if it already exists
-		cmd = exec.CommandContext(ctx, "terraform", "workspace", "select", args.TestRunID)
+		cmd = exec.CommandContext(ctx, "terraform", "workspace", "select", testRunID)
 		cmd.Dir = tfDir
 
 		if err := runWithOutput(cmd, logger); err != nil {
-			return "", cleanup, err
+			return nil, cleanup, err
 		}
 	}
 
@@ -109,13 +119,13 @@ func setupTf(
 		ctx,
 		"terraform",
 		"apply",
-		fmt.Sprintf("-var=project_id=%v", args.ProjectID),
 		"-input=false",
 		"-auto-approve",
 	)
+	cmd.Args = append(cmd.Args, tfVarArgs...)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
-		return "", cleanup, err
+		return nil, cleanup, err
 	}
 
 	// Run terraform output
@@ -124,21 +134,21 @@ func setupTf(
 	out, err := cmd.Output()
 	if err != nil {
 		logger.Println(err)
-		return "", cleanup, err
+		return nil, cleanup, err
 	}
-	var output tfOutput
-	if err := json.Unmarshal(out, &output); err != nil {
-		logger.Printf("Error unmarshaling terraform output json: %v\n", err)
-		return "", cleanup, err
+
+	tfOutput := &tfOutput{}
+	if err := json.Unmarshal(out, tfOutput); err != nil {
+		return nil, cleanup, err
 	}
-	logger.Printf("Got address: %v\n", output.Address.Value)
-	return output.Address.Value, cleanup, nil
+	logger.Printf("Tf output unmarshalled to: %v\n", *tfOutput)
+	return &tfOutput.PubsubInfoWrapper.Value, cleanup, nil
 }
 
 func deleteWorkspace(
 	ctx context.Context,
+	testRunID string,
 	tfDir string, // the Dir to set when running terraform commands in e.g. tf/gke
-	args *Args,
 	logger *log.Logger,
 ) {
 	// first, switch to default terraform workspace
@@ -149,9 +159,20 @@ func deleteWorkspace(
 	}
 
 	// issue delete
-	cmd = exec.CommandContext(ctx, "terraform", "workspace", "delete", args.TestRunID)
+	cmd = exec.CommandContext(ctx, "terraform", "workspace", "delete", testRunID)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
 		panic(err)
 	}
+}
+
+func tfVarMapToArgs(
+	projectID string,
+	tfVars map[string]string,
+) []string {
+	tfVarArgs := []string{fmt.Sprintf("-var=project_id=%v", projectID)}
+	for k, v := range tfVars {
+		tfVarArgs = append(tfVarArgs, fmt.Sprintf("-var=%v=%v", k, v))
+	}
+	return tfVarArgs
 }

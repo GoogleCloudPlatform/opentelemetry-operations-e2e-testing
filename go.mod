@@ -17,6 +17,7 @@ module github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing
 go 1.16
 
 require (
+	cloud.google.com/go/pubsub v1.3.1
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/alexflint/go-arg v1.4.1
 	github.com/containerd/containerd v1.4.4 // indirect

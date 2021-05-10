@@ -87,12 +87,12 @@ variable "labels" {
 
 output "info" {
   value = {
-    request = {
+    request_topic = {
       topic_name = google_pubsub_topic.request.name
       subscription_name = google_pubsub_subscription.request_subscription.name
     }
 
-    response = {
+    response_topic = {
       topic_name = google_pubsub_topic.response.name
       subscription_name = google_pubsub_subscription.response_subscription.name
     }

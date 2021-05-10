@@ -28,42 +28,6 @@ import (
 	"github.com/alexflint/go-arg"
 )
 
-type LocalCmd struct {
-	Image string `arg:"required" help:"docker container image to deploy and test"`
-	Port  string `default:"8000"`
-
-	// Needed when running without a metadata server for credentials
-	GoogleApplicationCredentials string `arg:"--google-application-credentials,env:GOOGLE_APPLICATION_CREDENTIALS" help:"Path to google credentials key file to mount into test server container"`
-
-	// May be needed when running this binary in a container
-	Network string `help:"Docker network to use when starting the container, optional"`
-}
-
-type GkeCmd struct {
-	Image string `arg:"required" help:"docker container image to deploy and test"`
-}
-
-type Args struct {
-	Local *LocalCmd `arg:"subcommand:local"`
-	Gke   *GkeCmd   `arg:"subcommand:gke"`
-
-	GoTestFlags string `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
-	ProjectID   string `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
-
-	// This is used in a new terraform workspace's name and in the GCP resources
-	// we create. Pass the GCB build ID in CI to get the build id formatted into
-	// resources created for debugging. If not provided, we generate a hex
-	// string.
-	TestRunID string `arg:"--test-run-id,env:TEST_RUN_ID" help:"Optional test run id to use to partition terraform resources"`
-}
-
-type Cleanup func()
-type SetupFunc func(
-	context.Context,
-	*Args,
-	*log.Logger,
-) (*testclient.Client, Cleanup, error)
-
 var (
 	args             Args
 	testServerClient *testclient.Client
@@ -97,9 +61,9 @@ func TestMain(m *testing.M) {
 	var setupFunc SetupFunc
 	switch {
 	case args.Local != nil:
-		setupFunc = setupLocal
+		setupFunc = SetupLocal
 	case args.Gke != nil:
-		setupFunc = setupGke
+		setupFunc = SetupGke
 	}
 	client, cleanup, err := setupFunc(ctx, &args, logger)
 
@@ -112,7 +76,10 @@ func TestMain(m *testing.M) {
 	testServerClient = client
 
 	// wait for instrumented test server to be healthy
-	err = testServerClient.WaitForHealth(context.Background(), logger)
+	logger.Println("Waiting for health check on pub/sub channel")
+	cctx, cancel := context.WithTimeout(ctx, time.Second*15)
+	defer cancel()
+	err = testServerClient.WaitForHealth(cctx, logger)
 	if err != nil {
 		panic(err)
 	}
@@ -120,5 +87,3 @@ func TestMain(m *testing.M) {
 	// Run tests
 	m.Run()
 }
-
-func noopCleanup() {}
