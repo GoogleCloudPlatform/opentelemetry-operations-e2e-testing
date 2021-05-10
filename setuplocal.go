@@ -47,6 +47,7 @@ func SetupLocal(
 		map[string]string{},
 		logger,
 	)
+
 	if err != nil {
 		return nil, NoopCleanup, err
 	}
@@ -57,7 +58,7 @@ func SetupLocal(
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	createdRes, err := createContainer(ctx, cli, args, logger)
+	createdRes, err := createContainer(ctx, cli, args, pubsubInfo, logger)
 	if err != nil {
 		return nil, cleanupTf, err
 	}
@@ -104,9 +105,15 @@ func createContainer(
 	ctx context.Context,
 	cli *client.Client,
 	args *Args,
+	pubsubInfo *setuptf.PubsubInfo,
 	logger *log.Logger,
 ) (container.ContainerCreateCreatedBody, error) {
-	env := []string{"PORT=" + args.Local.Port, "PROJECT_ID=" + args.ProjectID}
+	env := []string{
+		"PORT=" + args.Local.Port,
+		"PROJECT_ID=" + args.ProjectID,
+		"REQUEST_SUBSCRIPTION_NAME=" + pubsubInfo.RequestTopic.SubscriptionName,
+		"RESPONSE_TOPIC_NAME=" + pubsubInfo.ResponseTopic.TopicName,
+	}
 	mounts := []mount.Mount{}
 	if args.Local.GoogleApplicationCredentials != "" {
 		env = append(env, "GOOGLE_APPLICATION_CREDENTIALS="+args.Local.GoogleApplicationCredentials)

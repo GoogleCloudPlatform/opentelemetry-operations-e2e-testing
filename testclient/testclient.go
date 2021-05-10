@@ -54,11 +54,14 @@ func New(ctx context.Context, projectID string, pubsubInfo *setuptf.PubsubInfo) 
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
+	client := &Client{
 		pubsubClient:         pubsub,
 		requestTopic:         pubsub.Topic(pubsubInfo.RequestTopic.TopicName),
 		responseSubscription: pubsub.Subscription(pubsubInfo.ResponseTopic.SubscriptionName),
-	}, nil
+	}
+	// Disable buffering
+	client.requestTopic.PublishSettings.CountThreshold = 1
+	return client, nil
 }
 
 func (c *Client) Request(
