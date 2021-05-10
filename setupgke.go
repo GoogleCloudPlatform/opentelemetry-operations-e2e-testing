@@ -17,7 +17,6 @@ package e2e_testing
 import (
 	"context"
 	"log"
-	"os"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
@@ -33,7 +32,7 @@ func SetupGke(
 	args *Args,
 	logger *log.Logger,
 ) (*testclient.Client, Cleanup, error) {
-	pubsubInfo, cleanup, err := setuptf.SetupTf(
+	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
@@ -41,13 +40,10 @@ func SetupGke(
 		map[string]string{},
 		logger,
 	)
-
-	// TODO remove
-	os.Exit(1)
+	if err != nil {
+		return nil, NoopCleanup, err
+	}
 
 	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)
-	if err != nil {
-		return nil, cleanup, err
-	}
-	return client, cleanup, err
+	return client, cleanupTf, err
 }

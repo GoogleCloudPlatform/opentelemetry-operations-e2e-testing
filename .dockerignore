@@ -1,3 +1,5 @@
 Dockerfile
 opentelemetry-operations-e2e-testing.test
 .git
+terraform
+tf/**/.terraform*

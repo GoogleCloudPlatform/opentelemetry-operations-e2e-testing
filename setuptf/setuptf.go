@@ -141,7 +141,6 @@ func SetupTf(
 	if err := json.Unmarshal(out, tfOutput); err != nil {
 		return nil, cleanup, err
 	}
-	logger.Printf("Tf output unmarshalled to: %v\n", *tfOutput)
 	return &tfOutput.PubsubInfoWrapper.Value, cleanup, nil
 }
 

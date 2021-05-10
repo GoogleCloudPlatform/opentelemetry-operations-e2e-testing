@@ -47,7 +47,6 @@ func SetupLocal(
 		map[string]string{},
 		logger,
 	)
-
 	if err != nil {
 		return nil, NoopCleanup, err
 	}
