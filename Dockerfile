@@ -15,10 +15,6 @@
 FROM golang:1.16 AS build
 WORKDIR /src
 
-# for faster builds 
-COPY go.mod go.sum ./
-RUN go mod graph | awk '{if ($1 !~ "@") print $2}' | xargs go get
-
 COPY . .
 RUN CGO_ENABLED=0 go test -c
 # need a dummy file to create /tmp dir in the scratch image
