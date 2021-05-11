@@ -183,6 +183,9 @@ func applyPersistent(
 		"terraform",
 		"apply",
 		"-input=false",
+		// lock may not be acquired immediately in CI if there are multiple
+		// jobs, but should only be a short wait
+		"-lock-timeout=10m",
 		"-auto-approve",
 		fmt.Sprintf("-var=project_id=%v", projectID),
 	)

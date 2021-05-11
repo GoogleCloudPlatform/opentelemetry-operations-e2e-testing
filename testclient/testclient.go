@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
@@ -80,8 +79,7 @@ func (c *Client) Request(
 		res    *Response
 		resErr error
 	)
-	cctx, cancel := context.WithTimeout(ctx, time.Second*15)
-	defer cancel()
+	cctx, cancel := context.WithCancel(ctx)
 	err = c.responseSubscription.Receive(cctx, func(ctx context.Context, message *pubsub.Message) {
 		if testID := message.Attributes[TestID]; testID == request.TestID {
 			message.Ack()

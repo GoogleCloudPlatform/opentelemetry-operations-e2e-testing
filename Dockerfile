@@ -18,15 +18,12 @@ WORKDIR /src
 COPY . .
 RUN CGO_ENABLED=0 go test -c
 # need a dummy file to create /tmp dir in the scratch image
-RUN touch /.empty
+# RUN touch /.empty
 
-FROM alpine:latest as certs
-RUN apk --update add ca-certificates
-
-FROM scratch
+FROM alpine:3.13
+RUN apk --update add ca-certificates git
 COPY --from=build /src/opentelemetry-operations-e2e-testing.test /opentelemetry-operations-e2e-testing.test
 COPY --from=build /src/tf /tf
-COPY --from=build /.empty /tmp/
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# COPY --from=build /.empty /tmp/
 COPY --from=hashicorp/terraform:light /bin/terraform /bin/terraform
 ENTRYPOINT ["/opentelemetry-operations-e2e-testing.test", "--gotestflags=-test.v"]

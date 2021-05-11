@@ -73,7 +73,7 @@ func listTracesWithRetry(
 	err = retry.Do(ctx, backoff, func(ctx context.Context) error {
 		gctRes, err = cloudtraceService.Projects.Traces.List(args.ProjectID).
 			StartTime(string(startTimeBytes)).
-			Filter(fmt.Sprintf("+test-id:%v", testID)).
+			Filter(fmt.Sprintf("+%v:%v", testclient.TestID, testID)).
 			View("COMPLETE").
 			PageSize(10).
 			Do()
