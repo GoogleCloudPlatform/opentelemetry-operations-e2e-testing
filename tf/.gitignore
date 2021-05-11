@@ -5,6 +5,9 @@
 *.tfstate
 *.tfstate.*
 
+# tf lock files, not needed since we use gcs backend
+*.terraform.lock.hcl
+
 # Crash log files
 crash.log
 

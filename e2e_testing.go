@@ -32,6 +32,10 @@ type LocalCmd struct {
 	Network string `help:"Docker network to use when starting the container, optional"`
 }
 
+type GceCmd struct {
+	Image string `arg:"required" help:"docker container image to deploy and test"`
+}
+
 type GkeCmd struct {
 	Image string `arg:"required" help:"docker container image to deploy and test"`
 }
@@ -39,9 +43,11 @@ type GkeCmd struct {
 type Args struct {
 	Local *LocalCmd `arg:"subcommand:local"`
 	Gke   *GkeCmd   `arg:"subcommand:gke"`
+	Gce   *GceCmd   `arg:"subcommand:gce"`
 
-	GoTestFlags string `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
-	ProjectID   string `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
+	GoTestFlags        string `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
+	ProjectID          string `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
+	HealthCheckTimeout string `args:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"2m"`
 
 	// This is used in a new terraform workspace's name and in the GCP resources
 	// we create. Pass the GCB build ID in CI to get the build id formatted into

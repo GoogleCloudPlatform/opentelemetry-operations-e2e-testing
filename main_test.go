@@ -17,6 +17,7 @@ package e2e_testing
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -62,6 +63,8 @@ func TestMain(m *testing.M) {
 	switch {
 	case args.Local != nil:
 		setupFunc = SetupLocal
+	case args.Gce != nil:
+		setupFunc = SetupGce
 	case args.Gke != nil:
 		setupFunc = SetupGke
 	}
@@ -76,8 +79,12 @@ func TestMain(m *testing.M) {
 	testServerClient = client
 
 	// wait for instrumented test server to be healthy
-	logger.Println("Waiting for health check on pub/sub channel")
-	cctx, cancel := context.WithTimeout(ctx, time.Minute*2)
+	timeoutDuration, err := time.ParseDuration(args.HealthCheckTimeout)
+	if err != nil {
+		panic(fmt.Errorf("couldn't parse health check timeout duration string: %w", err))
+	}
+	logger.Printf("Waiting for health check on pub/sub channel (will timeout after %v)\n", timeoutDuration)
+	cctx, cancel := context.WithTimeout(ctx, timeoutDuration)
 	defer cancel()
 	err = testServerClient.WaitForHealth(cctx, logger)
 	if err != nil {

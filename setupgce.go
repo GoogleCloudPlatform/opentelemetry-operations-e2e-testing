@@ -22,12 +22,12 @@ import (
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 )
 
-const gkeTfDir string = "tf/gke"
+const gceTfDir string = "tf/gce"
 
-// Set up the instrumented test server to run in GKE. Creates a new GKE cluster
-// and runs the specified container image in a pod. The returned cleanup
-// function tears down the whole cluster.
-func SetupGke(
+// Set up the instrumented test server to run in GCE container. Creates a new
+// GCE VM + pubsub resources, and runs the specified container image. The
+// returned cleanup function tears down the VM.
+func SetupGce(
 	ctx context.Context,
 	args *Args,
 	logger *log.Logger,
@@ -36,9 +36,9 @@ func SetupGke(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		gkeTfDir,
+		gceTfDir,
 		map[string]string{
-			"image": args.Gke.Image,
+			"image": args.Gce.Image,
 		},
 		logger,
 	)

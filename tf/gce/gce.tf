@@ -13,10 +13,9 @@
 # limitations under the License.
 
 resource "google_compute_instance" "default" {
-
   # The terraform workspace will be given a random name (test run id) which we
   # can use to get unique resource names.
-  name = "ops-test-${terraform.workspace}"
+  name = "e2etest-${terraform.workspace}"
   machine_type = "e2-micro"
   allow_stopping_for_update = true
 
@@ -56,7 +55,7 @@ module "gce_container" {
   container = {
     image = var.image
 
-    env =[
+    env = [
       {
         name = "PROJECT_ID"
         value = var.project_id
