@@ -18,17 +18,19 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
+	"strconv"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
+	"google.golang.org/genproto/googleapis/rpc/code"
 )
 
 const (
-	TestID   string = "test-id"
-	Scenario string = "scenario"
-	Status   string = "status"
-	Health   string = "/health"
+	TestID     string = "test_id"
+	Scenario   string = "scenario"
+	StatusCode string = "status_code"
+	Health     string = "/health"
 )
 
 type Request struct {
@@ -38,10 +40,8 @@ type Request struct {
 }
 
 type Response struct {
-	Status string `json:"status"`
+	StatusCode code.Code
 }
-
-type Option func(*http.Request) *http.Request
 
 type Client struct {
 	pubsubClient         *pubsub.Client
@@ -76,25 +76,38 @@ func (c *Client) Request(
 		return nil, err
 	}
 
-	var res *Response
-	cctx, cancel := context.WithCancel(ctx)
+	var (
+		res    *Response
+		resErr error
+	)
+	cctx, cancel := context.WithTimeout(ctx, time.Second*15)
+	defer cancel()
 	err = c.responseSubscription.Receive(cctx, func(ctx context.Context, message *pubsub.Message) {
 		if testID := message.Attributes[TestID]; testID == request.TestID {
 			message.Ack()
-			res = &Response{Status: message.Attributes[Status]}
+			codeInt, err := strconv.Atoi(message.Attributes[StatusCode])
+			if err != nil {
+				resErr = fmt.Errorf(`response pub/sub message missing required attribute "%v", message: %v`, StatusCode, message)
+			} else {
+				res = &Response{StatusCode: code.Code(codeInt)}
+			}
 			cancel()
+		} else {
+			message.Nack()
 		}
-		message.Nack()
 	})
-	if res == nil {
-		err = fmt.Errorf(
+
+	if err != nil {
+		return nil, err
+	} else if resErr != nil {
+		return nil, resErr
+	} else if res == nil {
+		// Can happen if cctx times out
+		return nil, fmt.Errorf(
 			"sent message ID %v, but never received a response on subscription %v",
 			messageID,
 			c.responseSubscription.String(),
 		)
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return res, nil

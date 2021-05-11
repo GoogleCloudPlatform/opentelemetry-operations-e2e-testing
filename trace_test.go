@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 	"github.com/sethvargo/go-retry"
 	cloudtrace "google.golang.org/api/cloudtrace/v1"
+	"google.golang.org/genproto/googleapis/rpc/code"
 )
 
 const basicTraceSpanName string = "basicTrace"
@@ -44,12 +45,12 @@ func checkTestScenarioResponse(t *testing.T, scenario string, res *testclient.Re
 	if err != nil {
 		t.Fatalf("test server failed for scenario %v: %v", scenario, err)
 	}
-	switch res.Status {
-	case "200":
-	case "404":
+	switch res.StatusCode {
+	case code.Code_OK:
+	case code.Code_UNIMPLEMENTED:
 		t.Skipf("test server does not support this scenario, skipping")
 	default:
-		t.Fatalf(`got unexpected response code "%v" from test server`, res.Status)
+		t.Fatalf(`got unexpected response code "%v" from test server`, res.StatusCode)
 	}
 }
 
