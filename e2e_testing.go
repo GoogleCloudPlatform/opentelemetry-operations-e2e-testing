@@ -17,6 +17,7 @@ package e2e_testing
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 )
@@ -47,7 +48,7 @@ type Args struct {
 
 	GoTestFlags        string `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
 	ProjectID          string `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
-	HealthCheckTimeout string `args:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"2m"`
+	HealthCheckTimeout time.Duration `args:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"2m"`
 
 	// This is used in a new terraform workspace's name and in the GCP resources
 	// we create. Pass the GCB build ID in CI to get the build id formatted into

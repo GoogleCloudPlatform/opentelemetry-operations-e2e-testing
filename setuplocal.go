@@ -48,7 +48,7 @@ func SetupLocal(
 		logger,
 	)
 	if err != nil {
-		return nil, NoopCleanup, err
+		return nil, cleanupTf, err
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)

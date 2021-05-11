@@ -23,6 +23,8 @@ import (
 	"os/exec"
 )
 
+const tfPersistentDir = "tf/persistent"
+
 type tfOutput struct {
 	PubsubInfoWrapper struct {
 		Value PubsubInfo `json:"value"`
@@ -68,8 +70,12 @@ func SetupTf(
 	tfVars map[string]string, // key-values for terraform input vars to send to terraform
 	logger *log.Logger,
 ) (*PubsubInfo, func(), error) {
+	logger.Println("Applying any changes to persistent resources")
+	if err := applyPersistent(ctx, projectID, logger); err != nil {
+		return nil, func() {}, err
+	}
+
 	tfVarArgs := tfVarMapToArgs(projectID, tfVars)
-	// Run terraform init just in case
 	cmd := exec.CommandContext(
 		ctx,
 		"terraform",
@@ -142,6 +148,50 @@ func SetupTf(
 		return nil, cleanup, err
 	}
 	return &tfOutput.PubsubInfoWrapper.Value, cleanup, nil
+}
+
+// Create persistent resources (in tf/persistent) that are used across tests. No
+// cleanup is required
+func applyPersistent(
+	ctx context.Context,
+	projectID string,
+	logger *log.Logger,
+) error {
+	// Run terraform init
+	cmd := exec.CommandContext(
+		ctx,
+		"terraform",
+		"init",
+		"-input=false",
+		fmt.Sprintf("-backend-config=bucket=%v-e2e-tfstate", projectID),
+	)
+	cmd.Dir = tfPersistentDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		return err
+	}
+
+	// Select default terraform workspace
+	cmd = exec.CommandContext(ctx, "terraform", "workspace", "select", "default")
+	cmd.Dir = tfPersistentDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		return err
+	}
+
+	// Run terraform apply
+	cmd = exec.CommandContext(
+		ctx,
+		"terraform",
+		"apply",
+		"-input=false",
+		"-auto-approve",
+		fmt.Sprintf("-var=project_id=%v", projectID),
+	)
+	cmd.Dir = tfPersistentDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func deleteWorkspace(

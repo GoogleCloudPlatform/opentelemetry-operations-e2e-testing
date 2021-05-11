@@ -50,4 +50,8 @@ variable "project_id" {
 locals {
   # Common labels to be assigned to all resources
   common_labels = {"otel-e2e-tests" = true}
+  
+  # Name of persistent GKE cluster used across tests
+  gke_cluster_name = "e2etest-default"
+  gke_cluster_location = "us-central1"
 }

@@ -43,7 +43,7 @@ func SetupGke(
 		logger,
 	)
 	if err != nil {
-		return nil, NoopCleanup, err
+		return nil, cleanupTf, err
 	}
 
 	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)

@@ -12,24 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "google_container_cluster" "default" {
-  # The terraform workspace will be given a random name (test run id) which we
-  # can use to get unique resource names.
-  name = "e2etest-${terraform.workspace}"
-  location           = "us-central1"
-
-  initial_node_count = 1
-  node_config {
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform"
-    ]
-  }
+data "google_container_cluster" "default" {
+  name = local.gke_cluster_name
+  location = local.gke_cluster_location
 }
 
 data "google_client_config" "default" {}
+
 provider "kubernetes" {
-  host = "https://${google_container_cluster.default.endpoint}"
-  cluster_ca_certificate = "${base64decode(google_container_cluster.default.master_auth.0.cluster_ca_certificate)}"
+  host = "https://${data.google_container_cluster.default.endpoint}"
+  cluster_ca_certificate = "${base64decode(data.google_container_cluster.default.master_auth.0.cluster_ca_certificate)}"
   token = "${data.google_client_config.default.access_token}"
 }
 
