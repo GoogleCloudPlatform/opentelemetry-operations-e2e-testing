@@ -16,6 +16,7 @@ package e2e_testing
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -26,6 +27,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 )
@@ -59,8 +61,16 @@ func SetupLocal(
 
 	createdRes, err := createContainer(ctx, cli, args, pubsubInfo, logger)
 	if err != nil {
+		if errdefs.IsNotFound(err) {
+			err = fmt.Errorf(
+				`docker image not found, try running "docker pull %v": %w`,
+				args.Local.Image,
+				err,
+			)
+		}
 		return nil, cleanupTf, err
 	}
+
 	if len(createdRes.Warnings) != 0 {
 		logger.Printf("Started with warnings: %v", createdRes.Warnings)
 	}
