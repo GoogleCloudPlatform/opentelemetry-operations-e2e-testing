@@ -122,6 +122,7 @@ func createContainer(
 		"PROJECT_ID=" + args.ProjectID,
 		"REQUEST_SUBSCRIPTION_NAME=" + pubsubInfo.RequestTopic.SubscriptionName,
 		"RESPONSE_TOPIC_NAME=" + pubsubInfo.ResponseTopic.TopicName,
+		"SUBSCRIPTION_MODE=" + string(setuptf.Pull),
 	}
 	mounts := []mount.Mount{}
 	if args.Local.GoogleApplicationCredentials != "" {

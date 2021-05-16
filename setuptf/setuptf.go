@@ -23,7 +23,13 @@ import (
 	"os/exec"
 )
 
-const tfPersistentDir = "tf/persistent"
+const (
+	tfPersistentDir                  = "tf/persistent"
+	Push            SubscriptionMode = "push"
+	Pull            SubscriptionMode = "pull"
+)
+
+type SubscriptionMode string
 
 type tfOutput struct {
 	PubsubInfoWrapper struct {

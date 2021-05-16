@@ -47,6 +47,10 @@ resource "kubernetes_pod" "testserver" {
         name = "RESPONSE_TOPIC_NAME"
         value = module.pubsub.info.response_topic.topic_name
       }
+      env {
+        name = "SUBSCRIPTION_MODE"
+        value = "pull"
+      }
     }
   }
 }

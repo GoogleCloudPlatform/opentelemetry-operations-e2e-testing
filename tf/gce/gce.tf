@@ -38,9 +38,11 @@ resource "google_compute_instance" "default" {
   network_interface {
     network = "default"
 
-    access_config {
+    // TODO: remove this to not allocate external IP. Tried but GCE container
+    // doesn't seem to boot without public IP
+    access_config {     
       // Ephemeral IP
-    }
+    }  
   }
 
   service_account {
@@ -68,6 +70,10 @@ module "gce_container" {
         name = "RESPONSE_TOPIC_NAME"
         value = module.pubsub.info.response_topic.topic_name
       },
+      {
+        name = "SUBSCRIPTION_MODE"
+        value = "pull"
+      }
     ]
   }
 }
