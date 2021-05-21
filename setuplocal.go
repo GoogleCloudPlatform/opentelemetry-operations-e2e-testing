@@ -143,6 +143,7 @@ func createContainer(
 			ExposedPorts: nat.PortSet{
 				nat.Port(args.Local.Port): struct{}{},
 			},
+			User: args.Local.ContainerUser,
 		},
 		&container.HostConfig{
 			Mounts:      mounts,

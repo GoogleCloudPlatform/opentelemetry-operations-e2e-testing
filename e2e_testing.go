@@ -31,6 +31,8 @@ type LocalCmd struct {
 
 	// May be needed when running this binary in a container
 	Network string `help:"Docker network to use when starting the container, optional"`
+
+	ContainerUser string `arg:"--container-user" help:"Optional user to use when running the container"`
 }
 
 type GceCmd struct {
@@ -46,8 +48,8 @@ type Args struct {
 	Gke   *GkeCmd   `arg:"subcommand:gke"`
 	Gce   *GceCmd   `arg:"subcommand:gce"`
 
-	GoTestFlags        string `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
-	ProjectID          string `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
+	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
+	ProjectID          string        `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
 	HealthCheckTimeout time.Duration `args:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"2m"`
 
 	// This is used in a new terraform workspace's name and in the GCP resources
