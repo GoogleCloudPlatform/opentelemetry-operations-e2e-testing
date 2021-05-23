@@ -44,9 +44,9 @@ type GkeCmd struct {
 }
 
 type Args struct {
-	Local *LocalCmd `arg:"subcommand:local"`
-	Gke   *GkeCmd   `arg:"subcommand:gke"`
-	Gce   *GceCmd   `arg:"subcommand:gce"`
+	Local *LocalCmd `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
+	Gke   *GkeCmd   `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
+	Gce   *GceCmd   `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
 
 	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
 	ProjectID          string        `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
