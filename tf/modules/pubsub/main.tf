@@ -18,7 +18,7 @@ resource "google_pubsub_topic" "request" {
   name = "request-${terraform.workspace}"
 
   labels = merge({
-      tf-workspace = terraform.workspace
+    tf-workspace = terraform.workspace
     },
     var.labels
   )
@@ -31,7 +31,7 @@ resource "google_pubsub_subscription" "request_subscription" {
   ack_deadline_seconds = 60
 
   labels = merge({
-      tf-workspace = terraform.workspace
+    tf-workspace = terraform.workspace
     },
     var.labels
   )
@@ -53,7 +53,7 @@ resource "google_pubsub_topic" "response" {
   name = "response-${terraform.workspace}"
 
   labels = merge({
-      tf-workspace = terraform.workspace
+    tf-workspace = terraform.workspace
     },
     var.labels
   )
@@ -66,7 +66,7 @@ resource "google_pubsub_subscription" "response_subscription" {
   ack_deadline_seconds = 60
 
   labels = merge({
-      tf-workspace = terraform.workspace
+    tf-workspace = terraform.workspace
     },
     var.labels
   )
@@ -80,20 +80,20 @@ variable "project_id" {
 }
 
 variable "labels" {
-  type = map(string)
+  type        = map(string)
   description = "Additional labels to add to the pubsub topic"
-  default = {}
+  default     = {}
 }
 
 output "info" {
   value = {
     request_topic = {
-      topic_name = google_pubsub_topic.request.name
+      topic_name        = google_pubsub_topic.request.name
       subscription_name = google_pubsub_subscription.request_subscription.name
     }
 
     response_topic = {
-      topic_name = google_pubsub_topic.response.name
+      topic_name        = google_pubsub_topic.response.name
       subscription_name = google_pubsub_subscription.response_subscription.name
     }
   }

@@ -13,16 +13,16 @@
 # limitations under the License.
 
 data "google_container_cluster" "default" {
-  name = local.gke_cluster_name
+  name     = local.gke_cluster_name
   location = local.gke_cluster_location
 }
 
 data "google_client_config" "default" {}
 
 provider "kubernetes" {
-  host = "https://${data.google_container_cluster.default.endpoint}"
-  cluster_ca_certificate = "${base64decode(data.google_container_cluster.default.master_auth.0.cluster_ca_certificate)}"
-  token = "${data.google_client_config.default.access_token}"
+  host                   = "https://${data.google_container_cluster.default.endpoint}"
+  cluster_ca_certificate = base64decode(data.google_container_cluster.default.master_auth.0.cluster_ca_certificate)
+  token                  = data.google_client_config.default.access_token
 }
 
 resource "kubernetes_pod" "testserver" {
@@ -40,15 +40,15 @@ resource "kubernetes_pod" "testserver" {
         value = var.project_id
       }
       env {
-        name = "REQUEST_SUBSCRIPTION_NAME"
+        name  = "REQUEST_SUBSCRIPTION_NAME"
         value = module.pubsub.info.request_topic.subscription_name
       }
       env {
-        name = "RESPONSE_TOPIC_NAME"
+        name  = "RESPONSE_TOPIC_NAME"
         value = module.pubsub.info.response_topic.topic_name
       }
       env {
-        name = "SUBSCRIPTION_MODE"
+        name  = "SUBSCRIPTION_MODE"
         value = "pull"
       }
     }
@@ -66,6 +66,6 @@ variable "image" {
 }
 
 output "pubsub_info" {
-  value = module.pubsub.info
+  value       = module.pubsub.info
   description = "Info about the request/response pubsub topics and subscription to use in the test"
 }

@@ -16,11 +16,11 @@
 # local container
 
 module "pubsub" {
-  source = "../modules/pubsub"
+  source     = "../modules/pubsub"
   project_id = var.project_id
 }
 
 output "pubsub_info" {
-  value = module.pubsub.info
+  value       = module.pubsub.info
   description = "Info about the request/response pubsub topics and subscription to use in the test"
 }

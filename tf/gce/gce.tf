@@ -15,13 +15,13 @@
 resource "google_compute_instance" "default" {
   # The terraform workspace will be given a random name (test run id) which we
   # can use to get unique resource names.
-  name = "e2etest-${terraform.workspace}"
-  machine_type = "e2-micro"
+  name                      = "e2etest-${terraform.workspace}"
+  machine_type              = "e2-micro"
   allow_stopping_for_update = true
 
   labels = merge(
     local.common_labels,
-    {container-vm = module.gce_container.vm_container_label},
+    { container-vm = module.gce_container.vm_container_label },
   )
 
   boot_disk {
@@ -40,13 +40,13 @@ resource "google_compute_instance" "default" {
 
     // TODO: remove this to not allocate external IP. Tried but GCE container
     // doesn't seem to boot without public IP
-    access_config {     
+    access_config {
       // Ephemeral IP
-    }  
+    }
   }
 
   service_account {
-     scopes = ["cloud-platform"]
+    scopes = ["cloud-platform"]
   }
 }
 
@@ -59,19 +59,19 @@ module "gce_container" {
 
     env = [
       {
-        name = "PROJECT_ID"
+        name  = "PROJECT_ID"
         value = var.project_id
       },
       {
-        name = "REQUEST_SUBSCRIPTION_NAME"
+        name  = "REQUEST_SUBSCRIPTION_NAME"
         value = module.pubsub.info.request_topic.subscription_name
       },
       {
-        name = "RESPONSE_TOPIC_NAME"
+        name  = "RESPONSE_TOPIC_NAME"
         value = module.pubsub.info.response_topic.topic_name
       },
       {
-        name = "SUBSCRIPTION_MODE"
+        name  = "SUBSCRIPTION_MODE"
         value = "pull"
       }
     ]
@@ -89,6 +89,6 @@ variable "image" {
 }
 
 output "pubsub_info" {
-  value = module.pubsub.info
+  value       = module.pubsub.info
   description = "Info about the request/response pubsub topics and subscription to use in the test"
 }

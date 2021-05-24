@@ -18,11 +18,11 @@
 terraform {
   required_providers {
     google = {
-      source = "hashicorp/google"
+      source  = "hashicorp/google"
       version = "3.67.0"
     }
     kubernetes = {
-      source = "hashicorp/kubernetes"
+      source  = "hashicorp/kubernetes"
       version = "2.1.0"
     }
   }
@@ -33,7 +33,7 @@ terraform {
     # -backend-config="bucket=$PROJECT_ID-e2e-tfstate"
 
     # bucket  = "${var.project_id}-e2e-tfstate"
-    prefix  = "terraform/state"
+    prefix = "terraform/state"
   }
 }
 
@@ -49,9 +49,9 @@ variable "project_id" {
 
 locals {
   # Common labels to be assigned to all resources
-  common_labels = {"otel-e2e-tests" = true}
-  
+  common_labels = { "otel-e2e-tests" = true }
+
   # Name of persistent GKE cluster used across tests
-  gke_cluster_name = "e2etest-default"
+  gke_cluster_name     = "e2etest-default"
   gke_cluster_location = "us-central1"
 }

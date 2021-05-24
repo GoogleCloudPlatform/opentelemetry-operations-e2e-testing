@@ -20,7 +20,7 @@ module "python" {
 }
 
 module "java" {
-  source      = "../modules/repo-ci-triggers"
-  repository  = "opentelemetry-operations-java"
-  run_on      = ["local", "gce", "gke"]
+  source     = "../modules/repo-ci-triggers"
+  repository = "opentelemetry-operations-java"
+  run_on     = ["local", "gce", "gke"]
 }
