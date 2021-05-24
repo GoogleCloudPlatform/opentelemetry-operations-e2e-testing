@@ -47,7 +47,7 @@ resource "google_cloudbuild_trigger" "ci" {
       comment_control = "COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY"
     }
   }
-  name = "${local.repo_short_name}-e2e-run-${each.key}"
+  name = "${local.repo_short_name}-e2e-${each.key}"
   tags = [
     local.repo_short_name,
     each.key,
