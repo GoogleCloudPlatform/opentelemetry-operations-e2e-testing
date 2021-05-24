@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-/**
- * This module is for creating resources that should be persistent across tests.
- * It should be applied every run and never destroyed./
- */
-
 // This GKE cluster is used across GKE test runs for running pods, because GKE
 // cluster creation/destruction take ~3 minutes each
 resource "google_container_cluster" "default" {
