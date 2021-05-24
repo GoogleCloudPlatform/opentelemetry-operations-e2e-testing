@@ -95,5 +95,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Run tests
+	logger.Print(BeginOutputArt)
 	m.Run()
+	logger.Print(EndOutputArt)
 }
