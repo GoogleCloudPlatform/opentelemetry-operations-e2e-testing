@@ -108,7 +108,7 @@ func SetupTf(
 		cmd.Args = append(cmd.Args, tfVarArgs...)
 		cmd.Dir = tfDir
 		if err := runWithOutput(cmd, logger); err != nil {
-			panic(err)
+			logger.Panic(err)
 		}
 	}
 
@@ -212,14 +212,14 @@ func deleteWorkspace(
 	cmd := exec.CommandContext(ctx, "terraform", "workspace", "select", "default")
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 
 	// issue delete
 	cmd = exec.CommandContext(ctx, "terraform", "workspace", "delete", testRunID)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 }
 

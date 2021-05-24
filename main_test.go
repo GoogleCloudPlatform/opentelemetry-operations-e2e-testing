@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 	if args.ApplyPersistent != nil {
 		err := setuptf.ApplyPersistent(ctx, args.ProjectID, args.ApplyPersistent.AutoApprove, logger)
 		if err != nil {
-			panic(err)
+			logger.Panic(err)
 		}
 		return
 	}
@@ -79,7 +79,7 @@ func TestMain(m *testing.M) {
 
 	defer cleanup()
 	if err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 
 	// set global client
@@ -91,7 +91,7 @@ func TestMain(m *testing.M) {
 	defer cancel()
 	err = testServerClient.WaitForHealth(cctx, logger)
 	if err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 
 	// Run tests

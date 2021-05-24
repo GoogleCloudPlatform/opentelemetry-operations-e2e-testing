@@ -79,7 +79,7 @@ func SetupLocal(
 		defer cleanupTf()
 		err = cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true})
 		if err != nil {
-			panic(err)
+			logger.Panic(err)
 		}
 	}
 
@@ -94,7 +94,7 @@ func SetupLocal(
 		err = cli.ContainerStop(ctx, containerID, &timeout)
 		defer removeContainer()
 		if err != nil {
-			panic(err)
+			logger.Panic(err)
 		}
 	}
 
