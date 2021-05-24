@@ -22,13 +22,13 @@ resource "google_cloudbuild_trigger" "build_image" {
     name  = var.repository
     owner = "GoogleCloudPlatform"
     pull_request {
-      branch         = "^${var.main_branch}$"
+      branch          = "^${var.main_branch}$"
       comment_control = "COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY"
     }
   }
   name = "${local.repo_short_name}-e2e-build-image"
   tags = [
-    var.repository,
+    local.repo_short_name,
     "build"
   ]
 }
@@ -43,13 +43,13 @@ resource "google_cloudbuild_trigger" "ci" {
     name  = var.repository
     owner = "GoogleCloudPlatform"
     pull_request {
-      branch         = "^${var.main_branch}$"
+      branch          = "^${var.main_branch}$"
       comment_control = "COMMENTS_ENABLED_FOR_EXTERNAL_CONTRIBUTORS_ONLY"
     }
   }
   name = "${local.repo_short_name}-e2e-run-${each.key}"
   tags = [
-    var.repository,
+    local.repo_short_name,
     each.key,
   ]
 }

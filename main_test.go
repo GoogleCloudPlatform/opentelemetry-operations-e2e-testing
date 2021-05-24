@@ -24,6 +24,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 	"github.com/alexflint/go-arg"
 )
@@ -39,13 +40,22 @@ func TestMain(m *testing.M) {
 	if p.Subcommand() == nil {
 		p.Fail("missing command")
 	}
+	// Need a logger just for TestMain() before testing.T is available
+	logger := log.New(os.Stdout, "TestMain: ", log.LstdFlags|log.Lshortfile)
+	ctx := context.Background()
+
+	// Handle special case of just creating persistent resources
+	if args.ApplyPersistent != nil {
+		err := setuptf.ApplyPersistent(ctx, args.ProjectID, args.ApplyPersistent.AutoApprove, logger)
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
 
 	// hacky but works
 	os.Args = append([]string{os.Args[0]}, strings.Fields(args.GoTestFlags)...)
 	flag.Parse()
-
-	// need a logger just for TestMain() before testing.T is available
-	logger := log.New(os.Stdout, "TestMain: ", log.LstdFlags|log.Lshortfile)
 
 	// handle any complex defaults
 	if args.TestRunID == "" {
@@ -55,8 +65,6 @@ func TestMain(m *testing.M) {
 		}
 		args.TestRunID = hex
 	}
-
-	ctx := context.Background()
 
 	var setupFunc SetupFunc
 	switch {

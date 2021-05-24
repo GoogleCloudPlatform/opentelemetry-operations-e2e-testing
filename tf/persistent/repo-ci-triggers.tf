@@ -13,8 +13,8 @@
 # limitations under the License.
 
 module "python" {
-  source = "../modules/repo-ci-triggers"
-  repository = "opentelemetry-operations-python"
-  run_on = ["local", "gce", "gke"]
+  source      = "../modules/repo-ci-triggers"
+  repository  = "opentelemetry-operations-python"
+  run_on      = ["local", "gce", "gke"]
   main_branch = "master"
 }

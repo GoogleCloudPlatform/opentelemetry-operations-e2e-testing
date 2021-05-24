@@ -58,6 +58,16 @@ func runWithOutput(cmd *exec.Cmd, logger *log.Logger) error {
 	return nil
 }
 
+func initCommand(ctx context.Context, projectID string) *exec.Cmd {
+	return exec.CommandContext(
+		ctx,
+		"terraform",
+		"init",
+		"-input=false",
+		fmt.Sprintf("-backend-config=bucket=%v-e2e-tfstate", projectID),
+	)
+}
+
 // Runs the sequence of terraform commands most environemnts need, returns the
 // output bytes of `terraform output -json` and a cleanup function to teardown
 // the created resources.
@@ -76,19 +86,8 @@ func SetupTf(
 	tfVars map[string]string, // key-values for terraform input vars to send to terraform
 	logger *log.Logger,
 ) (*PubsubInfo, func(), error) {
-	logger.Println("Applying any changes to persistent resources")
-	if err := applyPersistent(ctx, projectID, logger); err != nil {
-		return nil, func() {}, err
-	}
-
 	tfVarArgs := tfVarMapToArgs(projectID, tfVars)
-	cmd := exec.CommandContext(
-		ctx,
-		"terraform",
-		"init",
-		"-input=false",
-		fmt.Sprintf("-backend-config=bucket=%v-e2e-tfstate", projectID),
-	)
+	cmd := initCommand(ctx, projectID)
 	cmd.Args = append(cmd.Args, tfVarArgs...)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
@@ -158,19 +157,15 @@ func SetupTf(
 
 // Create persistent resources (in tf/persistent) that are used across tests. No
 // cleanup is required
-func applyPersistent(
+func ApplyPersistent(
 	ctx context.Context,
 	projectID string,
+	autoApprove bool,
 	logger *log.Logger,
 ) error {
+	logger.Println("Applying any changes to persistent resources")
 	// Run terraform init
-	cmd := exec.CommandContext(
-		ctx,
-		"terraform",
-		"init",
-		"-input=false",
-		fmt.Sprintf("-backend-config=bucket=%v-e2e-tfstate", projectID),
-	)
+	cmd := initCommand(ctx, projectID)
 	cmd.Dir = tfPersistentDir
 	if err := runWithOutput(cmd, logger); err != nil {
 		return err
@@ -192,9 +187,13 @@ func applyPersistent(
 		// lock may not be acquired immediately in CI if there are multiple
 		// jobs, but should only be a short wait
 		"-lock-timeout=10m",
-		"-auto-approve",
 		fmt.Sprintf("-var=project_id=%v", projectID),
 	)
+	if autoApprove {
+		cmd.Args = append(cmd.Args, "-auto-approve")
+	} else {
+		cmd.Stdin = os.Stdin
+	}
 	cmd.Dir = tfPersistentDir
 	if err := runWithOutput(cmd, logger); err != nil {
 		return err

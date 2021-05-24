@@ -22,6 +22,10 @@ import (
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 )
 
+type ApplyPersistent struct {
+	AutoApprove bool `arg:"--auto-approve" default:"false" help:"Approve without prompting. Default is false."`
+}
+
 type LocalCmd struct {
 	Image string `arg:"required" help:"docker container image to deploy and test"`
 	Port  string `default:"8000"`
@@ -44,6 +48,11 @@ type GkeCmd struct {
 }
 
 type Args struct {
+	// This subcommand is a special case, it doesn't run any tests. It just
+	// applies the persistent resources which are used across tests. See
+	// tf/persistent/README.md for details on what is in there.
+	ApplyPersistent *ApplyPersistent `arg:"subcommand:apply-persistent" help:"Terraform apply the resources in tf/persistent and exit (does not run tests)."`
+
 	Local *LocalCmd `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
 	Gke   *GkeCmd   `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
 	Gce   *GceCmd   `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
