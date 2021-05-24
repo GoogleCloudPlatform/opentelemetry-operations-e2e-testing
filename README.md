@@ -13,13 +13,20 @@ Build the docker image locally:
 docker build . -t opentelemetry-operations-e2e-testing:local
 ```
 
-Run the image with a test server, e.g. with the python instrumented test server:
+Run the image with a test server, e.g. with the python instrumented test server
+from a recent build:
 
 ```bash
+PROJECT_ID="opentelemetry-ops-e2e"
 GOOGLE_APPLICATION_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json
 
+# Using a recent python build for example. Alternatively, use a locally built
+# test server.
+INSTRUMENTED_TEST_SERVER="gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-python-e2e-test-server:45ccd1d"
+
+# Pull the image if it doesn't exist locally
+docker pull $INSTRUMENTED_TEST_SERVER
 docker run \
-    --tmpfs /tmp \
     -e GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS \
     -v "$GOOGLE_APPLICATION_CREDENTIALS:$GOOGLE_APPLICATION_CREDENTIALS:ro" \
     -v /var/run/docker.sock:/var/run/docker.sock \
@@ -27,8 +34,7 @@ docker run \
     --rm \
     opentelemetry-operations-e2e-testing:local \
     local \
-    --image=operations-python-e2e-test-server:0.1.4 \
-    --gotestflags=-test.v
+    --image=$INSTRUMENTED_TEST_SERVER
 ```
 
 ## Contributing
