@@ -18,3 +18,9 @@ module "python" {
   run_on      = ["local", "gce", "gke"]
   main_branch = "master"
 }
+
+module "java" {
+  source      = "../modules/repo-ci-triggers"
+  repository  = "opentelemetry-operations-java"
+  run_on      = ["local", "gce", "gke"]
+}

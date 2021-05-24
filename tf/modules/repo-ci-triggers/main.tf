@@ -16,7 +16,7 @@
 // Build the image
 resource "google_cloudbuild_trigger" "build_image" {
   description = "Pull request CI to build docker image of e2e test server for ${var.repository}"
-  filename    = "cloudbuild.yaml"
+  filename    = "cloudbuild-e2e-image.yaml"
   github {
     # shorten the name
     name  = var.repository
