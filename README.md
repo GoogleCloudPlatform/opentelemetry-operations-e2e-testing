@@ -5,6 +5,11 @@ GCP's OpenTelemetry exporters, resource detectors, propagators, etc. These tests
 are run in pull requests to the other
 GoogleCloudPlatform/opentelemtry-operations-* repos.
 
+The code in this repository is only for testing purposes! This project is not an
+official Google project. It is not supported by Google and Google specifically
+disclaims all warranties as to its quality, merchantability, or fitness for a
+particular purpose.
+
 ## Run locally
 
 Build the docker image locally:
