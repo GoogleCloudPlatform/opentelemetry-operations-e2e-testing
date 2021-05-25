@@ -3,7 +3,8 @@
 This project contains a test runner and config files which are used for testing
 GCP's OpenTelemetry exporters, resource detectors, propagators, etc. These tests
 are run in pull requests to the other
-GoogleCloudPlatform/opentelemtry-operations-* repos.
+[GoogleCloudPlatform/opentelemtry-operations-*](https://github.com/GoogleCloudPlatform/?q=opentelemetry-operations-&type=&language=&sort=)
+repos.
 
 The code in this repository is only for testing purposes! This project is not an
 official Google project. It is not supported by Google and Google specifically
@@ -23,7 +24,7 @@ from a recent build:
 
 ```bash
 PROJECT_ID="opentelemetry-ops-e2e"
-GOOGLE_APPLICATION_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json
+GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/application_default_credentials.json"
 
 # Using a recent python build for example. Alternatively, use a locally built
 # test server.
@@ -44,7 +45,7 @@ docker run \
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
+See [`docs/contributing.md`](docs/contributing.md) for details.
 
 ## License
 
