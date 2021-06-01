@@ -29,7 +29,11 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/code"
 )
 
-const basicTraceSpanName string = "basicTrace"
+const (
+	basicTraceSpanName string = "basicTrace"
+	rpcClient          string = "RPC_CLIENT"
+	rpcServer          string = "RPC_SERVER"
+)
 
 func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 	cloudtraceService, err := cloudtrace.NewService(ctx)
@@ -144,11 +148,11 @@ func TestBasicTrace(t *testing.T) {
 		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {
 			val, ok := span.Labels[tc.expectKey]
 			if !ok {
-				t.Fatalf(`Missing label "%v"`, tc.expectKey)
+				t.Errorf(`Missing label "%v"`, tc.expectKey)
 			}
 			match, _ := regexp.MatchString(tc.expectRe, val)
 			if !match {
-				t.Fatalf(
+				t.Errorf(
 					`For label key %v, value "%v" did not match regex "%v"`,
 					tc.expectKey,
 					val,
@@ -177,9 +181,63 @@ func TestComplexTrace(t *testing.T) {
 	if numTraces := len(gctRes.Traces); numTraces != 1 {
 		t.Fatalf("Got %v traces, expected 1", numTraces)
 	}
-	if len(gctRes.Traces[0].Spans) == 4 {
-		t.Fatalf("Got zero spans in trace %v, expected 4", gctRes.Traces[0].TraceId)
+	trace := gctRes.Traces[0]
+	if numSpans := len(trace.Spans); numSpans != 4 {
+		t.Fatalf("Got %v spans in trace %v, but expected 4", numSpans, trace.TraceId)
 	}
 
-	// ... finish implementing
+	spanByName := make(map[string]*cloudtrace.TraceSpan)
+	for _, span := range trace.Spans {
+		spanByName[span.Name] = span
+	}
+
+	cases := []struct {
+		name             string
+		expectKind       string
+		expectParentName string
+	}{
+		{
+			name: "complexTrace/root",
+		},
+		{
+			name:             "complexTrace/child1",
+			expectKind:       rpcServer,
+			expectParentName: "complexTrace/root",
+		},
+		{
+			name:             "complexTrace/child2",
+			expectKind:       rpcClient,
+			expectParentName: "complexTrace/child1",
+		},
+		{
+			name:             "complexTrace/child3",
+			expectKind:       "",
+			expectParentName: "complexTrace/root",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(fmt.Sprintf("assert structure of span %v", tc.name), func(t *testing.T) {
+			span := spanByName[tc.name]
+			if span == nil {
+				t.Errorf("Missing span named %v", tc.name)
+			}
+
+			if tc.expectParentName == "" {
+				if span.ParentSpanId != 0 {
+					t.Errorf("Expected no parent, but got %v", span.ParentSpanId)
+				}
+			} else {
+				parentSpan := spanByName[tc.expectParentName]
+				if parentSpan == nil {
+					t.Errorf("The parent span %v does not exist in the trace", tc.expectParentName)
+				} else if parentSpan.SpanId != span.ParentSpanId {
+					t.Errorf("Expected parent span ID %v, but got %v", parentSpan.SpanId, span.ParentSpanId)
+				}
+			}
+			if tc.expectKind != "" && span.Kind != tc.expectKind {
+				t.Errorf("Expected span kind %v, but got %v", tc.expectKind, span.Kind)
+			}
+		})
+	}
 }
