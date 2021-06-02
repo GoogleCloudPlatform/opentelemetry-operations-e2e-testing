@@ -23,6 +23,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 	"github.com/sethvargo/go-retry"
 	cloudtrace "google.golang.org/api/cloudtrace/v1"
@@ -46,9 +49,8 @@ func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
 // Checks response code for the test server response and fatals or skips the
 // test if necessary.
 func checkTestScenarioResponse(t *testing.T, scenario string, res *testclient.Response, err error) {
-	if err != nil {
-		t.Fatalf("test server failed for scenario %v: %v", scenario, err)
-	}
+	require.NoErrorf(t, err, "test server failed for scenario %v: %v", scenario, err)
+
 	switch res.StatusCode {
 	case code.Code_OK:
 	case code.Code_UNIMPLEMENTED:
@@ -67,9 +69,7 @@ func listTracesWithRetry(
 ) *cloudtrace.ListTracesResponse {
 	// Assert response
 	startTimeBytes, err := startTime.MarshalText()
-	if err != nil {
-		t.Fatalf("Couldn't marshal time to text: %v", err)
-	}
+	require.NoErrorf(t, err, "Couldn't marshal time to text: %v", err)
 
 	var gctRes *cloudtrace.ListTracesResponse
 	backoff, _ := retry.NewConstant(1 * time.Second)
@@ -92,9 +92,7 @@ func listTracesWithRetry(
 		return nil
 	})
 
-	if err != nil {
-		t.Fatalf("Failed to list traces: %v", err)
-	}
+	require.NoErrorf(t, err, "Failed to list traces: %v", err)
 	return gctRes
 }
 
@@ -113,6 +111,7 @@ func TestBasicTrace(t *testing.T) {
 
 	// Assert response
 	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
+
 	if numTraces := len(gctRes.Traces); numTraces != 1 {
 		t.Fatalf("Got %v traces, expected 1", numTraces)
 	}
@@ -121,10 +120,7 @@ func TestBasicTrace(t *testing.T) {
 	}
 
 	span := gctRes.Traces[0].Spans[0]
-
-	if span.Name != basicTraceSpanName {
-		t.Fatalf(`Expected span name %v, got "%v"`, basicTraceSpanName, span.Name)
-	}
+	require.Equalf(t, span.Name, basicTraceSpanName, `Expected span name %v, got "%v"`, basicTraceSpanName, span.Name)
 
 	if numLabels := len(span.Labels); numLabels != 2 {
 		t.Fatalf("Expected exactly 2 labels, got %v", numLabels)
@@ -147,18 +143,16 @@ func TestBasicTrace(t *testing.T) {
 	for _, tc := range labelCases {
 		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {
 			val, ok := span.Labels[tc.expectKey]
-			if !ok {
-				t.Errorf(`Missing label "%v"`, tc.expectKey)
-			}
-			match, _ := regexp.MatchString(tc.expectRe, val)
-			if !match {
-				t.Errorf(
-					`For label key %v, value "%v" did not match regex "%v"`,
-					tc.expectKey,
-					val,
-					tc.expectRe,
-				)
-			}
+			assert.Truef(t, ok, `Missing label "%v"`, tc.expectKey)
+			assert.Regexpf(
+				t,
+				tc.expectRe,
+				val,
+				`For label key %v, value "%v" did not match regex "%v"`,
+				tc.expectKey,
+				val,
+				tc.expectRe,
+			)
 		})
 	}
 }
@@ -219,14 +213,10 @@ func TestComplexTrace(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(fmt.Sprintf("assert structure of span %v", tc.name), func(t *testing.T) {
 			span := spanByName[tc.name]
-			if span == nil {
-				t.Errorf("Missing span named %v", tc.name)
-			}
+			assert.NotNilf(t, span, "Missing span named %v", tc.name)
 
 			if tc.expectParentName == "" {
-				if span.ParentSpanId != 0 {
-					t.Errorf("Expected no parent, but got %v", span.ParentSpanId)
-				}
+				assert.EqualValuesf(t, 0, span.ParentSpanId, "Expected no parent, but got %v", span.ParentSpanId)
 			} else {
 				parentSpan := spanByName[tc.expectParentName]
 				if parentSpan == nil {
