@@ -1,6 +1,6 @@
 # opentelemetry-operations-e2e-testing
 
-This project contains a test runner and config files which are used for testing
+This project contains a test runner and configuration which are used for testing
 GCP's OpenTelemetry exporters, resource detectors, propagators, etc. These tests
 are run in pull requests to the other
 [GoogleCloudPlatform/opentelemtry-operations-*](https://github.com/GoogleCloudPlatform/?q=opentelemetry-operations-&type=&language=&sort=)
