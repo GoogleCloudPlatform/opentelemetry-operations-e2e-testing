@@ -26,7 +26,8 @@ module "java" {
 }
 
 module "js" {
-  source     = "../modules/repo-ci-triggers"
-  repository = "opentelemetry-operations-js"
-  run_on     = ["local", "gce", "gke"]
+  source      = "../modules/repo-ci-triggers"
+  repository  = "opentelemetry-operations-js"
+  run_on      = ["local", "gce", "gke"]
+  main_branch = "master"
 }
