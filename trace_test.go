@@ -33,9 +33,11 @@ import (
 )
 
 const (
-	basicTraceSpanName string = "basicTrace"
-	rpcClient          string = "RPC_CLIENT"
-	rpcServer          string = "RPC_SERVER"
+	basicTraceSpanName      string = "basicTrace"
+	basicPropagatorSpanName string = "basicPropagator"
+	rpcClient               string = "RPC_CLIENT"
+	rpcServer               string = "RPC_SERVER"
+	xCloudTraceContextName  string = "X-Cloud-Trace-Context"
 )
 
 func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
@@ -230,4 +232,48 @@ func TestComplexTrace(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBasicPropagator(t *testing.T) {
+	ctx := context.Background()
+	scenario := "/basicPropagator"
+	startTime := time.Now().Add(time.Second * -5)
+	cloudtraceService := newTraceService(t, ctx)
+	testID := fmt.Sprint(rand.Uint64())
+
+	// Generate random trace and span IDs
+	traceIdHex, err := randomHex(16)
+	require.NoErrorf(t, err, "test server failed for scenario %v: %v", scenario, err)
+	parentSpanIdDec := rand.Uint64()
+	xCloudTraceContext := fmt.Sprintf("%v/%v;o=1", traceIdHex, parentSpanIdDec)
+
+	// Call test server
+	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+	res, err := testServerClient.Request(
+		reqCtx,
+		testclient.Request{
+			Scenario: scenario,
+			TestID:   testID,
+			Headers:  map[string]string{xCloudTraceContextName: xCloudTraceContext},
+		},
+	)
+	checkTestScenarioResponse(t, scenario, res, err)
+
+	// Assert response
+	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
+
+	if numTraces := len(gctRes.Traces); numTraces != 1 {
+		t.Fatalf("Got %v traces, expected 1", numTraces)
+	}
+	if len(gctRes.Traces[0].Spans) == 0 {
+		t.Fatalf("Got zero spans in trace %v", gctRes.Traces[0].TraceId)
+	}
+
+	trace := gctRes.Traces[0]
+	span := trace.Spans[0]
+	require.Equalf(t, span.Name, basicPropagatorSpanName, `Expected span name %v, got "%v"`, basicPropagatorSpanName, span.Name)
+	require.Equalf(t, span.Name, basicPropagatorSpanName, `Expected span name %v, got "%v"`, basicPropagatorSpanName, span.Name)
+	require.Equalf(t, traceIdHex, trace.TraceId, `Expected trace ID %v, got "%v"`, traceIdHex, trace.TraceId)
+	require.Equalf(t, parentSpanIdDec, span.ParentSpanId, `Expected parent span ID %v, got "%v"`, parentSpanIdDec, span.ParentSpanId)
 }
