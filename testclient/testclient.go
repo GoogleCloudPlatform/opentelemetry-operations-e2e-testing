@@ -36,6 +36,7 @@ type Request struct {
 	// name of the scenario to run
 	Scenario string
 	TestID   string
+	Headers  map[string]string
 }
 
 type Response struct {
@@ -67,8 +68,12 @@ func (c *Client) Request(
 	ctx context.Context,
 	request Request,
 ) (*Response, error) {
+	attributes := map[string]string{TestID: request.TestID, "scenario": request.Scenario}
+	for k, v := range request.Headers {
+		attributes[k] = v
+	}
 	pubResult := c.requestTopic.Publish(ctx, &pubsub.Message{
-		Attributes: map[string]string{TestID: request.TestID, "scenario": request.Scenario},
+		Attributes: attributes,
 	})
 	messageID, err := pubResult.Get(ctx)
 	if err != nil {
