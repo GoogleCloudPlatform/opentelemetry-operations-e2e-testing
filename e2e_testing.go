@@ -26,9 +26,14 @@ type ApplyPersistent struct {
 	AutoApprove bool `arg:"--auto-approve" default:"false" help:"Approve without prompting. Default is false."`
 }
 
-type LocalCmd struct {
+type CmdWithImage struct {
 	Image string `arg:"required" help:"docker container image to deploy and test"`
-	Port  string `default:"8000"`
+}
+
+type LocalCmd struct {
+	CmdWithImage
+
+	Port string `default:"8000"`
 
 	// Needed when running without a metadata server for credentials
 	GoogleApplicationCredentials string `arg:"--google-application-credentials,env:GOOGLE_APPLICATION_CREDENTIALS" help:"Path to google credentials key file to mount into test server container"`
@@ -40,11 +45,15 @@ type LocalCmd struct {
 }
 
 type GceCmd struct {
-	Image string `arg:"required" help:"docker container image to deploy and test"`
+	CmdWithImage
 }
 
 type GkeCmd struct {
-	Image string `arg:"required" help:"docker container image to deploy and test"`
+	CmdWithImage
+}
+
+type CloudRunCmd struct {
+	CmdWithImage
 }
 
 type Args struct {
@@ -53,9 +62,10 @@ type Args struct {
 	// tf/persistent/README.md for details on what is in there.
 	ApplyPersistent *ApplyPersistent `arg:"subcommand:apply-persistent" help:"Terraform apply the resources in tf/persistent and exit (does not run tests)."`
 
-	Local *LocalCmd `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
-	Gke   *GkeCmd   `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
-	Gce   *GceCmd   `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	Local    *LocalCmd    `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
+	Gke      *GkeCmd      `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
+	Gce      *GceCmd      `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	CloudRun *CloudRunCmd `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
 
 	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
 	ProjectID          string        `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
