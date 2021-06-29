@@ -108,7 +108,10 @@ func TestBasicTrace(t *testing.T) {
 	// Call test server
 	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	res, err := testServerClient.Request(reqCtx, testclient.Request{Scenario: scenario, TestID: testID})
+	res, err := testServerClient.Request(
+		reqCtx,
+		testclient.Request{Scenario: scenario, TestID: testID},
+	)
 	checkTestScenarioResponse(t, scenario, res, err)
 
 	// Assert response
@@ -122,7 +125,14 @@ func TestBasicTrace(t *testing.T) {
 	}
 
 	span := gctRes.Traces[0].Spans[0]
-	require.Equalf(t, span.Name, basicTraceSpanName, `Expected span name %v, got "%v"`, basicTraceSpanName, span.Name)
+	require.Equalf(
+		t,
+		span.Name,
+		basicTraceSpanName,
+		`Expected span name %v, got "%v"`,
+		basicTraceSpanName,
+		span.Name,
+	)
 
 	if numLabels := len(span.Labels); numLabels != 2 {
 		t.Fatalf("Expected exactly 2 labels, got %v", numLabels)
@@ -169,7 +179,10 @@ func TestComplexTrace(t *testing.T) {
 	// Call test server
 	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	res, err := testServerClient.Request(reqCtx, testclient.Request{Scenario: scenario, TestID: testID})
+	res, err := testServerClient.Request(
+		reqCtx,
+		testclient.Request{Scenario: scenario, TestID: testID},
+	)
 	checkTestScenarioResponse(t, scenario, res, err)
 
 	// Assert response
@@ -218,7 +231,13 @@ func TestComplexTrace(t *testing.T) {
 			assert.NotNilf(t, span, "Missing span named %v", tc.name)
 
 			if tc.expectParentName == "" {
-				assert.EqualValuesf(t, 0, span.ParentSpanId, "Expected no parent, but got %v", span.ParentSpanId)
+				assert.EqualValuesf(
+					t,
+					0,
+					span.ParentSpanId,
+					"Expected no parent, but got %v",
+					span.ParentSpanId,
+				)
 			} else {
 				parentSpan := spanByName[tc.expectParentName]
 				if parentSpan == nil {
@@ -272,8 +291,28 @@ func TestBasicPropagator(t *testing.T) {
 
 	trace := gctRes.Traces[0]
 	span := trace.Spans[0]
-	require.Equalf(t, span.Name, basicPropagatorSpanName, `Expected span name %v, got "%v"`, basicPropagatorSpanName, span.Name)
-	require.Equalf(t, span.Name, basicPropagatorSpanName, `Expected span name %v, got "%v"`, basicPropagatorSpanName, span.Name)
-	require.Equalf(t, traceIdHex, trace.TraceId, `Expected trace ID %v, got "%v"`, traceIdHex, trace.TraceId)
-	require.Equalf(t, parentSpanIdDec, span.ParentSpanId, `Expected parent span ID %v, got "%v"`, parentSpanIdDec, span.ParentSpanId)
+	require.Equalf(
+		t,
+		span.Name,
+		basicPropagatorSpanName,
+		`Expected span name %v, got "%v"`,
+		basicPropagatorSpanName,
+		span.Name,
+	)
+	require.Equalf(
+		t,
+		traceIdHex,
+		trace.TraceId,
+		`Expected trace ID %v, got "%v"`,
+		traceIdHex,
+		trace.TraceId,
+	)
+	require.Equalf(
+		t,
+		parentSpanIdDec,
+		span.ParentSpanId,
+		`Expected parent span ID %v, got "%v"`,
+		parentSpanIdDec,
+		span.ParentSpanId,
+	)
 }
