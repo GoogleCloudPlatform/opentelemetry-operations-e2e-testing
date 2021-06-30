@@ -24,23 +24,23 @@ from a recent build:
 
 ```bash
 PROJECT_ID="opentelemetry-ops-e2e"
-GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/application_default_credentials.json"
+GOOGLE_APPLICATION_CREDENTIALS="${HOME}/.config/gcloud/application_default_credentials.json"
 
 # Using a recent python build for example. Alternatively, use a locally built
 # test server.
 INSTRUMENTED_TEST_SERVER="gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-python-e2e-test-server:45ccd1d"
 
 # Pull the image if it doesn't exist locally
-docker pull $INSTRUMENTED_TEST_SERVER
+docker pull ${INSTRUMENTED_TEST_SERVER}
 docker run \
-    -e GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS \
-    -v "$GOOGLE_APPLICATION_CREDENTIALS:$GOOGLE_APPLICATION_CREDENTIALS:ro" \
+    -e "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" \
+    -v "${GOOGLE_APPLICATION_CREDENTIALS}:${GOOGLE_APPLICATION_CREDENTIALS}:ro" \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -e PROJECT_ID=$PROJECT_ID \
+    -e PROJECT_ID=${PROJECT_ID} \
     --rm \
     opentelemetry-operations-e2e-testing:local \
     local \
-    --image=$INSTRUMENTED_TEST_SERVER
+    --image=${INSTRUMENTED_TEST_SERVER}
 ```
 
 ## Contributing
