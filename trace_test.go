@@ -16,7 +16,6 @@ package e2e_testing
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand"
 	"regexp"
@@ -33,10 +32,11 @@ import (
 )
 
 const (
-	basicTraceSpanName      string = "basicTrace"
 	basicPropagatorSpanName string = "basicPropagator"
+	basicTraceSpanName      string = "basicTrace"
 	rpcClient               string = "RPC_CLIENT"
 	rpcServer               string = "RPC_SERVER"
+	traceIdKey              string = "trace_id"
 	xCloudTraceContextName  string = "X-Cloud-Trace-Context"
 )
 
@@ -62,46 +62,32 @@ func checkTestScenarioResponse(t *testing.T, scenario string, res *testclient.Re
 	}
 }
 
-func listTracesWithRetry(
+func getTraceWithRetry(
 	ctx context.Context,
 	t *testing.T,
 	cloudtraceService *cloudtrace.Service,
-	startTime time.Time,
-	testID string,
-) *cloudtrace.ListTracesResponse {
-	// Assert response
-	startTimeBytes, err := startTime.MarshalText()
-	require.NoErrorf(t, err, "Couldn't marshal time to text: %v", err)
-
-	var gctRes *cloudtrace.ListTracesResponse
+	traceId string,
+) *cloudtrace.Trace {
+	var trace *cloudtrace.Trace
 	backoff, _ := retry.NewConstant(1 * time.Second)
 	backoff = retry.WithMaxDuration(time.Second*10, backoff)
-	err = retry.Do(ctx, backoff, func(ctx context.Context) error {
-		gctRes, err = cloudtraceService.Projects.Traces.List(args.ProjectID).
-			StartTime(string(startTimeBytes)).
-			Filter(fmt.Sprintf("+%v:%v", testclient.TestID, testID)).
-			View("COMPLETE").
-			PageSize(10).
-			Do()
+	err := retry.Do(ctx, backoff, func(ctx context.Context) error {
+		var err error
+		trace, err = cloudtraceService.Projects.Traces.Get(args.ProjectID, traceId).Context(ctx).Do()
 		if err != nil {
-			return retry.RetryableError(err)
-		}
-		if len(gctRes.Traces) == 0 {
-			err = errors.New("Got zero spans in trace")
-			t.Logf("Retrying ListSpans: %v", err)
+			t.Logf("Retrying GetTrace: %v", err)
 			return retry.RetryableError(err)
 		}
 		return nil
 	})
-
-	require.NoErrorf(t, err, "Failed to list traces: %v", err)
-	return gctRes
+	require.NoError(t, err)
+	require.NotNil(t, trace)
+	return trace
 }
 
 func TestBasicTrace(t *testing.T) {
 	ctx := context.Background()
 	scenario := "/basicTrace"
-	startTime := time.Now().Add(time.Second * -5)
 	cloudtraceService := newTraceService(t, ctx)
 	testID := fmt.Sprint(rand.Uint64())
 
@@ -113,18 +99,16 @@ func TestBasicTrace(t *testing.T) {
 		testclient.Request{Scenario: scenario, TestID: testID},
 	)
 	checkTestScenarioResponse(t, scenario, res, err)
+	traceId := res.Headers[traceIdKey]
+	require.NotEmptyf(t, traceId, "Expected header %q but it was missing", traceIdKey)
+	trace := getTraceWithRetry(ctx, t, cloudtraceService, traceId)
 
 	// Assert response
-	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
-
-	if numTraces := len(gctRes.Traces); numTraces != 1 {
-		t.Fatalf("Got %v traces, expected 1", numTraces)
-	}
-	if len(gctRes.Traces[0].Spans) == 0 {
-		t.Fatalf("Got zero spans in trace %v", gctRes.Traces[0].TraceId)
+	if len(trace.Spans) == 0 {
+		t.Fatalf("Got zero spans in trace %v", trace.TraceId)
 	}
 
-	span := gctRes.Traces[0].Spans[0]
+	span := trace.Spans[0]
 	require.Equalf(
 		t,
 		span.Name,
@@ -172,7 +156,6 @@ func TestBasicTrace(t *testing.T) {
 func TestComplexTrace(t *testing.T) {
 	ctx := context.Background()
 	scenario := "/complexTrace"
-	startTime := time.Now().Add(time.Second * -5)
 	cloudtraceService := newTraceService(t, ctx)
 	testID := fmt.Sprint(rand.Uint64())
 
@@ -186,11 +169,9 @@ func TestComplexTrace(t *testing.T) {
 	checkTestScenarioResponse(t, scenario, res, err)
 
 	// Assert response
-	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
-	if numTraces := len(gctRes.Traces); numTraces != 1 {
-		t.Fatalf("Got %v traces, expected 1", numTraces)
-	}
-	trace := gctRes.Traces[0]
+	traceId := res.Headers[traceIdKey]
+	require.NotEmptyf(t, traceId, "Expected header %q but it was missing", traceIdKey)
+	trace := getTraceWithRetry(ctx, t, cloudtraceService, traceId)
 	if numSpans := len(trace.Spans); numSpans != 4 {
 		t.Fatalf("Got %v spans in trace %v, but expected 4", numSpans, trace.TraceId)
 	}
@@ -256,7 +237,6 @@ func TestComplexTrace(t *testing.T) {
 func TestBasicPropagator(t *testing.T) {
 	ctx := context.Background()
 	scenario := "/basicPropagator"
-	startTime := time.Now().Add(time.Second * -5)
 	cloudtraceService := newTraceService(t, ctx)
 	testID := fmt.Sprint(rand.Uint64())
 
@@ -280,16 +260,12 @@ func TestBasicPropagator(t *testing.T) {
 	checkTestScenarioResponse(t, scenario, res, err)
 
 	// Assert response
-	gctRes := listTracesWithRetry(ctx, t, cloudtraceService, startTime, testID)
+	trace := getTraceWithRetry(ctx, t, cloudtraceService, traceIdHex)
 
-	if numTraces := len(gctRes.Traces); numTraces != 1 {
-		t.Fatalf("Got %v traces, expected 1", numTraces)
-	}
-	if len(gctRes.Traces[0].Spans) == 0 {
-		t.Fatalf("Got zero spans in trace %v", gctRes.Traces[0].TraceId)
+	if len(trace.Spans) == 0 {
+		t.Fatalf("Got zero spans in trace %v", trace.TraceId)
 	}
 
-	trace := gctRes.Traces[0]
 	span := trace.Spans[0]
 	require.Equalf(
 		t,
