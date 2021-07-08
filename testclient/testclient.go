@@ -41,6 +41,7 @@ type Request struct {
 
 type Response struct {
 	StatusCode code.Code
+	Headers    map[string]string
 }
 
 type Client struct {
@@ -92,7 +93,7 @@ func (c *Client) Request(
 			if err != nil {
 				resErr = fmt.Errorf(`response pub/sub message missing required attribute "%v", message: %v`, StatusCode, message)
 			} else {
-				res = &Response{StatusCode: code.Code(codeInt)}
+				res = &Response{StatusCode: code.Code(codeInt), Headers: message.Attributes}
 			}
 			cancel()
 		} else {
