@@ -17,24 +17,21 @@ module github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing
 go 1.16
 
 require (
-	cloud.google.com/go/pubsub v1.3.1
+	cloud.google.com/go/pubsub v1.12.2
 	github.com/Microsoft/go-winio v0.5.0 // indirect
-	github.com/alexflint/go-arg v1.4.1
-	github.com/containerd/containerd v1.4.4 // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v20.10.6+incompatible
+	github.com/alexflint/go-arg v1.4.2
+	github.com/containerd/containerd v1.5.2 // indirect
+	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/docker/go-units v0.4.0 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/sethvargo/go-retry v0.1.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/stretchr/testify v1.6.1
-	google.golang.org/api v0.45.0
-	google.golang.org/genproto v0.0.0-20210413151531-c14fb6ef47c3
-	gotest.tools/v3 v3.0.3 // indirect
+	github.com/stretchr/testify v1.7.0
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
+	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	google.golang.org/api v0.50.0
+	google.golang.org/genproto v0.0.0-20210708141623-e76da96a951f
 )
