@@ -12,18 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.16 AS build
+FROM golang:1.16 AS gobuild
 WORKDIR /src
-
 COPY . .
 RUN CGO_ENABLED=0 go test -c
-# need a dummy file to create /tmp dir in the scratch image
-# RUN touch /.empty
 
-FROM alpine:3.13
+FROM hashicorp/terraform:light as tfbuild
+COPY tf /src/tf
+WORKDIR /src/tf
+ENV TF_PLUGIN_CACHE_DIR=/src/tf/terraform-plugin-cache
+# run terraform init in each directory to cache the modules
+RUN for dir in */; do (cd $dir && terraform init -backend=false); done
+
+FROM alpine:3.14
 RUN apk --update add ca-certificates git
-COPY --from=build /src/opentelemetry-operations-e2e-testing.test /opentelemetry-operations-e2e-testing.test
-COPY --from=build /src/tf /tf
-# COPY --from=build /.empty /tmp/
-COPY --from=hashicorp/terraform:light /bin/terraform /bin/terraform
+COPY --from=gobuild /src/opentelemetry-operations-e2e-testing.test /opentelemetry-operations-e2e-testing.test
+COPY --from=tfbuild /src/tf /tf
+COPY --from=tfbuild /bin/terraform /bin/terraform
+ENV TF_PLUGIN_CACHE_DIR=/tf/terraform-plugin-cache
 ENTRYPOINT ["/opentelemetry-operations-e2e-testing.test", "--gotestflags=-test.v"]
