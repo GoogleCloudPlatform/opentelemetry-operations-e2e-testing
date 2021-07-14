@@ -91,7 +91,7 @@ func (c *Client) Request(
 			message.Ack()
 			codeInt, err := strconv.Atoi(message.Attributes[StatusCode])
 			if err != nil {
-				resErr = fmt.Errorf(`response pub/sub message missing required attribute "%v", message: %v`, StatusCode, message)
+				resErr = fmt.Errorf(`response pub/sub message invalid attribute %q: %v, message: %v`, StatusCode, err, message)
 			} else {
 				res = &Response{StatusCode: code.Code(codeInt), Headers: message.Attributes}
 			}
