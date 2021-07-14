@@ -29,3 +29,9 @@ module "js" {
   repository = "opentelemetry-operations-js"
   run_on     = ["local", "gce", "gke"]
 }
+
+module "go" {
+  source     = "../modules/repo-ci-triggers"
+  repository = "opentelemetry-operations-go"
+  run_on     = ["local", "gce", "gke"]
+}
