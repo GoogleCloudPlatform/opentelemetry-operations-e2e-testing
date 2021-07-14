@@ -129,7 +129,7 @@ func TestBasicTrace(t *testing.T) {
 		{
 			expectKey: "g.co/agent",
 			// TODO button this re down more
-			expectRe: `opentelemetry-[\w-]+ [\d\.]+; [\w-]+ [\d\.]+`,
+			expectRe: `opentelemetry-\S+ \S+; google-cloud-trace-exporter \S+`,
 		},
 		{
 			expectKey: testclient.TestID,
