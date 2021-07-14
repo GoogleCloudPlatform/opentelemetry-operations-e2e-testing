@@ -14,6 +14,11 @@
 
 FROM golang:1.16 AS gobuild
 WORKDIR /src
+
+# cache deps before copying source so that we don't re-download as much
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 RUN CGO_ENABLED=0 go test -c
 
