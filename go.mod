@@ -18,6 +18,7 @@ go 1.16
 
 require (
 	cloud.google.com/go/pubsub v1.12.2
+	cloud.google.com/go/storage v1.10.0
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/alexflint/go-arg v1.4.2
 	github.com/containerd/containerd v1.5.2 // indirect
