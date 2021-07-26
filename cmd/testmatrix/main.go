@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// This script generates the matrix.md file from most recent build of each
+// trigger.
+
 package main
 
 import (
