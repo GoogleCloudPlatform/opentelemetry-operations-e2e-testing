@@ -1,4 +1,4 @@
-## Matrix of support
+# Matrix of supported scenarios in each ops repo
 
 <table>
 	<thead>
@@ -121,3 +121,6 @@
 			</tr>
 	</tbody>
 </table>
+
+- *:white_check_mark: means passing*
+- *:leftwards_arrow_with_hook: means not implemented (skipped)*

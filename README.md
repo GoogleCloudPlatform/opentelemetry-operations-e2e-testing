@@ -11,8 +11,6 @@ official Google project. It is not supported by Google and Google specifically
 disclaims all warranties as to its quality, merchantability, or fitness for a
 particular purpose.
 
-## [Matrix of implemented scenarios](matrix.md)
-
 ## Run locally
 
 Build the docker image locally:
@@ -44,6 +42,8 @@ docker run \
     local \
     --image=${INSTRUMENTED_TEST_SERVER}
 ```
+
+## [Matrix of implemented scenarios](matrix.md)
 
 ## Contributing
 

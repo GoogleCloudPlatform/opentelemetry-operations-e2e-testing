@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"cloud.google.com/go/storage"
 	e2e_testing "github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing"
@@ -32,15 +33,17 @@ import (
 )
 
 const (
-	passIcon    = ":white_check_mark:"
-	skipIcon    = ":leftwards_arrow_with_hook:"
-	templateTxt = `<table>
+	pass        status = ":white_check_mark:"
+	skip        status = ":leftwards_arrow_with_hook:"
+	templateTxt        = `# Matrix of supported scenarios in each ops repo
+
+<table>
 	<thead>
 		<tr>
 			<th>Repo Name</th>
 			<th>Platform</th>
 			{{- range $.Scenarios }}
-				<th>{{.}}</th>
+				<th>{{ . }}</th>
 			{{- end }}
 		</tr>
 	</thead>
@@ -55,13 +58,16 @@ const (
 				{{- end }}
 				<td>{{ $platform }}</td>
 				{{- range $scenario := $.Scenarios }}
-					<td>{{ index (index (index $.RepoToPlatformToScenario $repoName) $platform) $scenario }}</td>
+					<td>{{ index $.RepoToPlatformToScenario $repoName $platform $scenario }}</td>
 				{{- end }}
 			</tr>
 		{{- end }}
 	{{- end }}
 	</tbody>
 </table>
+
+- *{{ .Pass }} means passing*
+- *{{ .Skip }} means not implemented (skipped)*
 `
 )
 
@@ -69,10 +75,12 @@ type Args struct {
 	e2e_testing.CmdWithProjectId
 }
 
-type triggerInfo struct {
-	RepoName  string
-	Platform  string
-	TriggerId string
+type status string
+
+type result struct {
+	RepoName string
+	Platform string
+	Statuses map[string]status
 }
 
 var (
@@ -97,43 +105,48 @@ func main() {
 
 	listTriggersRes, err := cloudbuildService.Projects.Triggers.List(args.ProjectID).
 		Context(ctx).
+		PageSize(128).
 		Do()
 	if err != nil {
 		panic(err)
 	}
-	repoToTriggerInfo := buildRepoToTriggers(listTriggersRes)
 
-	repoToPlatformToScenario := map[string]map[string]map[string]string{}
+	var wg sync.WaitGroup
+	results := make([]*result, len(listTriggersRes.Triggers))
+	for i, trigger := range listTriggersRes.Triggers {
+		wg.Add(1)
+		go handleTrigger(
+			ctx,
+			&wg,
+			args.ProjectID,
+			&results[i],
+			trigger,
+			cloudbuildService,
+			storageClient,
+		)
+	}
+	wg.Wait()
+
+	repoToPlatformToScenario := map[string]map[string]map[string]status{}
 	repoNameSet := map[string]struct{}{}
 	scenarioSet := map[string]struct{}{}
 	platformSet := map[string]struct{}{}
-	for repoName, triggerInfos := range repoToTriggerInfo {
-		repoNameSet[repoName] = struct{}{}
-		platformToScenario := map[string]map[string]string{}
-		repoToPlatformToScenario[repoName] = platformToScenario
-		for _, triggerInfo := range triggerInfos {
-			if triggerInfo.Platform == "build" {
-				continue
-			}
-			scenarioToStatus := map[string]string{}
-			platformToScenario[triggerInfo.Platform] = scenarioToStatus
-			platformSet[triggerInfo.Platform] = struct{}{}
+	for _, result := range results {
+		if result == nil || result.Platform == "build" {
+			continue
+		}
 
-			passes, skips := getNewestSupportForTrigger(
-				ctx,
-				args.ProjectID,
-				triggerInfo.TriggerId,
-				cloudbuildService,
-				storageClient,
-			)
-			for _, pass := range passes {
-				scenarioSet[pass] = struct{}{}
-				scenarioToStatus[pass] = passIcon
-			}
-			for _, skip := range skips {
-				scenarioSet[skip] = struct{}{}
-				scenarioToStatus[skip] = skipIcon
-			}
+		repoNameSet[result.RepoName] = struct{}{}
+		if repoToPlatformToScenario[result.RepoName] == nil {
+			repoToPlatformToScenario[result.RepoName] = map[string]map[string]status{}
+		}
+		platformToScenario := repoToPlatformToScenario[result.RepoName]
+
+		platformToScenario[result.Platform] = result.Statuses
+		platformSet[result.Platform] = struct{}{}
+
+		for scenario := range result.Statuses {
+			scenarioSet[scenario] = struct{}{}
 		}
 	}
 	repoNames := sortStringSet(repoNameSet)
@@ -145,51 +158,46 @@ func main() {
 		RepoNames                []string
 		Scenarios                []string
 		Platforms                []string
-		RepoToPlatformToScenario map[string]map[string]map[string]string
-	}{repoNames, scenarios, platforms, repoToPlatformToScenario})
+		RepoToPlatformToScenario map[string]map[string]map[string]status
+		Pass                     status
+		Skip                     status
+	}{repoNames, scenarios, platforms, repoToPlatformToScenario, pass, skip})
 
 	if err != nil {
 		panic(err)
 	}
 }
 
-// buildRepoToTriggers returns a map of repository name onto a map of string
-// (platform) to trigger Id
-func buildRepoToTriggers(res *cloudbuild.ListBuildTriggersResponse) map[string][]triggerInfo {
-	out := map[string][]triggerInfo{}
-	for _, trigger := range res.Triggers {
-		if !triggerNameRe.MatchString(trigger.Name) {
-			continue
-		}
-
-		repoName := trigger.Github.Name
-		// check tags
-		platform := trigger.Tags[1]
-		out[repoName] = append(
-			out[repoName],
-			triggerInfo{RepoName: repoName, Platform: platform, TriggerId: trigger.Id},
-		)
-	}
-	return out
-}
-
-// getNewestSupportForTrigger returns the passed and skipped scenarios for the
-// given trigger Id.
-func getNewestSupportForTrigger(
+// handleTrigger populates the resPtr with the results of the latest build of
+// the given trigger.
+func handleTrigger(
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	projectId string,
-	triggerId string,
+	resPtr **result,
+	trigger *cloudbuild.BuildTrigger,
 	cloudbuildService *cloudbuild.Service,
 	storageClient *storage.Client,
-) ([]string, []string) {
+) {
+	if !triggerNameRe.MatchString(trigger.Name) {
+		return
+	}
+	res := result{
+		RepoName: trigger.Github.Name,
+		Platform: trigger.Tags[1],
+		Statuses: make(map[string]status),
+	}
+
+	// fetch the latest successful build
 	listRes, err := cloudbuildService.Projects.Builds.List(projectId).
 		Context(ctx).
-		Filter(fmt.Sprintf(`trigger_id="%v" AND status="SUCCESS"`, triggerId)).
+		Filter(fmt.Sprintf(`trigger_id="%v" AND status="SUCCESS"`, trigger.Id)).
 		PageSize(1).
 		Do()
 	if err != nil {
 		panic(err)
 	}
+
 	build := listRes.Builds[0]
 	reader, err := storageClient.Bucket(strings.TrimPrefix(build.LogsBucket, "gs://")).
 		Object(fmt.Sprintf("log-%v.txt", build.Id)).
@@ -199,23 +207,21 @@ func getNewestSupportForTrigger(
 	}
 	defer reader.Close()
 
-	passes := []string{}
-	skips := []string{}
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if passMatches := scenarioPassRe.FindStringSubmatch(line); passMatches != nil {
-			passes = append(passes, passMatches[1])
-			continue
-		}
-		if skipMatches := scenarioSkipRe.FindStringSubmatch(line); skipMatches != nil {
-			skips = append(skips, skipMatches[1])
+			res.Statuses[passMatches[1]] = pass
+		} else if skipMatches := scenarioSkipRe.FindStringSubmatch(line); skipMatches != nil {
+			res.Statuses[skipMatches[1]] = skip
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
-	return passes, skips
+
+	*resPtr = &res
+	wg.Done()
 }
 
 func sortStringSet(set map[string]struct{}) []string {
