@@ -13,7 +13,11 @@
 // limitations under the License.
 
 // This script generates the matrix.md file from most recent build of each
-// trigger.
+// trigger:
+//
+// ```bash
+//	go run cmd/testmatrix/main.go > matrix.md
+// ```
 
 package main
 
@@ -105,6 +109,8 @@ func main() {
 		panic(err)
 	}
 
+	// Don't bother going over pages, just use a large page size and look at the
+	// first page
 	listTriggersRes, err := cloudbuildService.Projects.Triggers.List(args.ProjectID).
 		Context(ctx).
 		PageSize(128).
