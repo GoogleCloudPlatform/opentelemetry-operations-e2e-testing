@@ -22,16 +22,15 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-	"log"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 
 	"cloud.google.com/go/storage"
 	e2e_testing "github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing"
 	"github.com/alexflint/go-arg"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/cloudbuild/v1"
 )
 
@@ -103,7 +102,7 @@ func main() {
 	}
 	storageClient, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	listTriggersRes, err := cloudbuildService.Projects.Triggers.List(args.ProjectID).
@@ -114,21 +113,23 @@ func main() {
 		panic(err)
 	}
 
-	var wg sync.WaitGroup
+	g, egCtx := errgroup.WithContext(ctx)
 	results := make([]*result, len(listTriggersRes.Triggers))
 	for i, trigger := range listTriggersRes.Triggers {
-		wg.Add(1)
-		go handleTrigger(
-			ctx,
-			&wg,
-			args.ProjectID,
-			&results[i],
-			trigger,
-			cloudbuildService,
-			storageClient,
-		)
+		i := i
+		trigger := trigger
+		g.Go(func() error {
+			res, err := handleTrigger(egCtx, args.ProjectID, trigger, cloudbuildService, storageClient)
+			if err != nil {
+				return err
+			}
+			results[i] = res
+			return nil
+		})
 	}
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		panic(err)
+	}
 
 	repoToPlatformToScenario := map[string]map[string]map[string]status{}
 	repoNameSet := map[string]struct{}{}
@@ -171,21 +172,20 @@ func main() {
 	}
 }
 
-// handleTrigger populates the resPtr with the results of the latest build of
-// the given trigger.
+// handleTrigger returns the latest results for the given trigger by querying
+// builds and logs.
 func handleTrigger(
 	ctx context.Context,
-	wg *sync.WaitGroup,
 	projectId string,
-	resPtr **result,
 	trigger *cloudbuild.BuildTrigger,
 	cloudbuildService *cloudbuild.Service,
 	storageClient *storage.Client,
-) {
+) (*result, error) {
 	if !triggerNameRe.MatchString(trigger.Name) {
-		return
+		fmt.Printf("Skipping trigger %v which doesn't match regex", trigger.Name)
+		return nil, nil
 	}
-	res := result{
+	res := &result{
 		RepoName: trigger.Github.Name,
 		Platform: trigger.Tags[1],
 		Statuses: make(map[string]status),
@@ -198,7 +198,7 @@ func handleTrigger(
 		PageSize(1).
 		Do()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	build := listRes.Builds[0]
@@ -206,7 +206,7 @@ func handleTrigger(
 		Object(fmt.Sprintf("log-%v.txt", build.Id)).
 		NewReader(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer reader.Close()
 
@@ -220,11 +220,10 @@ func handleTrigger(
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	*resPtr = &res
-	wg.Done()
+	return res, nil
 }
 
 func sortStringSet(set map[string]struct{}) []string {
