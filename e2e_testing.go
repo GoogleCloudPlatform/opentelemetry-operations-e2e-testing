@@ -26,6 +26,10 @@ type ApplyPersistent struct {
 	AutoApprove bool `arg:"--auto-approve" default:"false" help:"Approve without prompting. Default is false."`
 }
 
+type CmdWithProjectId struct {
+	ProjectID string `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
+}
+
 type CmdWithImage struct {
 	Image string `arg:"required" help:"docker container image to deploy and test"`
 }
@@ -67,8 +71,8 @@ type Args struct {
 	Gce      *GceCmd      `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
 	CloudRun *CloudRunCmd `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
 
+	CmdWithProjectId
 	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
-	ProjectID          string        `arg:"required,--project-id,env:PROJECT_ID" help:"GCP project id/name"`
 	HealthCheckTimeout time.Duration `arg:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"2m"`
 
 	// This is used in a new terraform workspace's name and in the GCP resources

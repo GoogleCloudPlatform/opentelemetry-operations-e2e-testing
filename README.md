@@ -43,6 +43,8 @@ docker run \
     --image=${INSTRUMENTED_TEST_SERVER}
 ```
 
+## [Matrix of implemented scenarios](matrix.md)
+
 ## Contributing
 
 See [`docs/contributing.md`](docs/contributing.md) for details.
