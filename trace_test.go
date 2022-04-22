@@ -125,7 +125,7 @@ func TestBasicTrace(t *testing.T) {
 		if strings.HasPrefix(key, "g.co/r/") {
 			continue
 		}
-		if strings.HasPrefix(key, "otel.instrumentation_library") {
+		if strings.HasPrefix(key, "otel.scope") {
 			continue
 		}
 		numLabels += 1
