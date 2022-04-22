@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -118,8 +119,20 @@ func TestBasicTrace(t *testing.T) {
 		span.Name,
 	)
 
-	if numLabels := len(span.Labels); numLabels != 2 {
-		t.Fatalf("Expected exactly 2 labels, got %v", numLabels)
+	// Ignore-able labels (resource, instrumentation library)
+	numLabels := 0
+	for key := range span.Labels {
+		if strings.HasPrefix(key, "g.co/r/") {
+			continue
+		}
+		if strings.HasPrefix(key, "otel.scope") {
+			continue
+		}
+		numLabels += 1
+	}
+
+	if numLabels != 2 {
+		t.Fatalf("Expected exactly 2 non-resource labels, got %v", numLabels)
 	}
 
 	labelCases := []struct {
