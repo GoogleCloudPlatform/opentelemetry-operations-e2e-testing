@@ -129,6 +129,11 @@ func TestBasicTrace(t *testing.T) {
 		if strings.HasPrefix(key, "otel.scope") {
 			continue
 		}
+		// Some extra kubernetes attributes are added through environment variables on GKE.
+		// In scenarios without resource detection enabled, these show up as trace attributes.
+		if strings.HasPrefix(key, "k8s.") {
+			continue
+		}
 		numLabels += 1
 	}
 

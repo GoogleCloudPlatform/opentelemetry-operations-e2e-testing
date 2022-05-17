@@ -51,6 +51,30 @@ resource "kubernetes_pod" "testserver" {
         name  = "SUBSCRIPTION_MODE"
         value = "pull"
       }
+      env {
+        name = "POD_NAME"
+        value_from {
+          field_ref {
+            field_path = "metadata.name"
+          }
+        }
+      }
+      env {
+        name = "NAMESPACE_NAME"
+        value_from {
+          field_ref {
+            field_path = "metadata.namespace"
+          }
+        }
+      }
+      env {
+        name = "CONTAINER_NAME"
+        value = "fake-container-name"
+      }
+      env {
+        name = "OTEL_RESOURCE_ATTRIBUTES"
+        value = "k8s.pod.name=$(POD_NAME),k8s.namespace.name=$(NAMESPACE_NAME),k8s.container.name=$(CONTAINER_NAME)"
+      }
     }
   }
 }
