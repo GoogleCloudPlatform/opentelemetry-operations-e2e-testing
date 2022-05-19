@@ -33,12 +33,13 @@ import (
 )
 
 const (
-	basicPropagatorSpanName string = "basicPropagator"
-	basicTraceSpanName      string = "basicTrace"
-	rpcClient               string = "RPC_CLIENT"
-	rpcServer               string = "RPC_SERVER"
-	traceIdKey              string = "trace_id"
-	xCloudTraceContextName  string = "X-Cloud-Trace-Context"
+	basicPropagatorSpanName   string = "basicPropagator"
+	basicTraceSpanName        string = "basicTrace"
+	resourceDetectionSpanName string = "resourceDetectionTrace"
+	rpcClient                 string = "RPC_CLIENT"
+	rpcServer                 string = "RPC_SERVER"
+	traceIdKey                string = "trace_id"
+	xCloudTraceContextName    string = "X-Cloud-Trace-Context"
 )
 
 func newTraceService(t *testing.T, ctx context.Context) *cloudtrace.Service {
@@ -128,6 +129,11 @@ func TestBasicTrace(t *testing.T) {
 		if strings.HasPrefix(key, "otel.scope") {
 			continue
 		}
+		// Some extra kubernetes attributes are added through environment variables on GKE.
+		// In scenarios without resource detection enabled, these show up as trace attributes.
+		if strings.HasPrefix(key, "k8s.") {
+			continue
+		}
 		numLabels += 1
 	}
 
@@ -148,6 +154,91 @@ func TestBasicTrace(t *testing.T) {
 			expectKey: testclient.TestID,
 			expectRe:  regexp.QuoteMeta(testID),
 		},
+	}
+	for _, tc := range labelCases {
+		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {
+			val, ok := span.Labels[tc.expectKey]
+			assert.Truef(t, ok, `Missing label "%v"`, tc.expectKey)
+			assert.Regexpf(
+				t,
+				tc.expectRe,
+				val,
+				`For label key %v, value "%v" did not match regex "%v"`,
+				tc.expectKey,
+				val,
+				tc.expectRe,
+			)
+		})
+	}
+}
+
+func TestResourceDetectionTrace(t *testing.T) {
+	ctx := context.Background()
+	scenario := "/detectResource"
+	cloudtraceService := newTraceService(t, ctx)
+	testID := fmt.Sprint(rand.Uint64())
+
+	// Call test server
+	reqCtx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+	res, err := testServerClient.Request(
+		reqCtx,
+		testclient.Request{Scenario: scenario, TestID: testID},
+	)
+	checkTestScenarioResponse(t, scenario, res, err)
+	traceId := res.Headers[traceIdKey]
+	require.NotEmptyf(t, traceId, "Expected header %q but it was missing", traceIdKey)
+	trace := getTraceWithRetry(ctx, t, cloudtraceService, traceId)
+
+	// Assert response
+	if len(trace.Spans) == 0 {
+		t.Fatalf("Got zero spans in trace %v", trace.TraceId)
+	}
+
+	span := trace.Spans[0]
+	require.Equalf(
+		t,
+		span.Name,
+		resourceDetectionSpanName,
+		`Expected span name %v, got "%v"`,
+		resourceDetectionSpanName,
+		span.Name,
+	)
+
+	type labelExpectation struct {
+		expectKey string
+		expectRe  string
+	}
+	labelCases := []labelExpectation{
+		{
+			expectKey: "g.co/agent",
+			// TODO button this re down more
+			expectRe: `opentelemetry-\S+ \S+; google-cloud-trace-exporter \S+`,
+		},
+		{
+			expectKey: testclient.TestID,
+			expectRe:  regexp.QuoteMeta(testID),
+		},
+	}
+
+	switch {
+	case args.Local != nil:
+		t.Skip("Local runs do not need to test resource detection")
+	case args.Gce != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "g.co/r/gce_instance/zone", expectRe: `.*-.*-.*`},
+			labelExpectation{expectKey: "g.co/r/gce_instance/instance_id", expectRe: `.*`},
+		)
+	case args.Gke != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "g.co/r/k8s_container/location", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "g.co/r/k8s_container/cluster_name", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/k8s_container/namespace_name", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/k8s_container/pod_name", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/k8s_container/container_name", expectRe: `.*`},
+		)
+	case args.CloudRun != nil:
+		t.Skip("Monitored resource mapping not implemented")
 	}
 	for _, tc := range labelCases {
 		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {
