@@ -31,6 +31,7 @@ resource "google_cloudbuild_trigger" "build_image" {
     local.repo_short_name,
     "build"
   ]
+  include_build_logs = "INCLUDE_BUILD_LOGS_WITH_STATUS"
 }
 
 // Run tests
@@ -52,6 +53,7 @@ resource "google_cloudbuild_trigger" "ci" {
     local.repo_short_name,
     each.key,
   ]
+  include_build_logs = "INCLUDE_BUILD_LOGS_WITH_STATUS"
 }
 
 variable "repository" {
