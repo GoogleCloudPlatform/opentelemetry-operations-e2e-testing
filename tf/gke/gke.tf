@@ -68,11 +68,11 @@ resource "kubernetes_pod" "testserver" {
         }
       }
       env {
-        name = "CONTAINER_NAME"
+        name  = "CONTAINER_NAME"
         value = "fake-container-name"
       }
       env {
-        name = "OTEL_RESOURCE_ATTRIBUTES"
+        name  = "OTEL_RESOURCE_ATTRIBUTES"
         value = "k8s.pod.name=$(POD_NAME),k8s.namespace.name=$(NAMESPACE_NAME),k8s.container.name=$(CONTAINER_NAME)"
       }
     }
