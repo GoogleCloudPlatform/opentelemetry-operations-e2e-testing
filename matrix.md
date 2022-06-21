@@ -8,6 +8,7 @@
 				<th>TestBasicPropagator</th>
 				<th>TestBasicTrace</th>
 				<th>TestComplexTrace</th>
+				<th>TestResourceDetectionTrace</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -19,10 +20,12 @@
 					<td></td>
 					<td></td>
 					<td></td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>gce</td>
 					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 			</tr>
@@ -31,12 +34,14 @@
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>local</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td>:leftwards_arrow_with_hook:</td>
 			</tr>
 			<tr>
 				<td rowspan=4>
@@ -46,24 +51,28 @@
 					<td></td>
 					<td></td>
 					<td></td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>gce</td>
-					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>gke</td>
-					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>local</td>
-					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td rowspan=4>
@@ -73,24 +82,28 @@
 					<td></td>
 					<td></td>
 					<td></td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>gce</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>gke</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>local</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td rowspan=4>
@@ -100,24 +113,28 @@
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>gce</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>gke</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td></td>
 			</tr>
 			<tr>
 				<td>local</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td></td>
 			</tr>
 	</tbody>
 </table>
