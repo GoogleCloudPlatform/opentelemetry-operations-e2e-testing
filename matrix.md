@@ -58,6 +58,7 @@
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 					<td></td>
 			</tr>
 			<tr>
@@ -65,6 +66,7 @@
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 					<td></td>
 			</tr>
 			<tr>
@@ -72,6 +74,7 @@
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 					<td></td>
 			</tr>
 			<tr>
