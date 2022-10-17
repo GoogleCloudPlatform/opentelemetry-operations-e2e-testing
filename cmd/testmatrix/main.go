@@ -26,6 +26,7 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"log"
 	"os"
 	"regexp"
 	"sort"
@@ -74,6 +75,15 @@ const (
 
 - *{{ .Pass }} means passing*
 - *{{ .Skip }} means not implemented (skipped)*
+
+## Regenerate
+
+To regenerate this matrix, run from the repo root:
+` + "```sh" + `
+go run cmd/testmatrix/main.go --project-id=opentelemetry-ops-e2e > matrix.md
+` + "```" + `
+
+This will fetch recent Cloud Build logs to automatically update the statuses in this matrix.
 `
 )
 
@@ -188,7 +198,7 @@ func handleTrigger(
 	storageClient *storage.Client,
 ) (*result, error) {
 	if !triggerNameRe.MatchString(trigger.Name) {
-		fmt.Printf("Skipping trigger %v which doesn't match regex", trigger.Name)
+		log.Printf("Skipping trigger %v which doesn't match regex", trigger.Name)
 		return nil, nil
 	}
 	res := &result{
