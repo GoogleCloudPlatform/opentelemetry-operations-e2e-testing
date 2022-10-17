@@ -59,7 +59,6 @@
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
-					<td></td>
 			</tr>
 			<tr>
 				<td>gke</td>
@@ -67,15 +66,13 @@
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
-					<td></td>
 			</tr>
 			<tr>
 				<td>local</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:leftwards_arrow_with_hook:</td>
-					<td>:white_check_mark:</td>
-					<td></td>
+					<td>:leftwards_arrow_with_hook:</td>
 			</tr>
 			<tr>
 				<td rowspan=4>
@@ -144,3 +141,12 @@
 
 - *:white_check_mark: means passing*
 - *:leftwards_arrow_with_hook: means not implemented (skipped)*
+
+## Regenerate
+
+To regenerate this matrix, run from the repo root:
+```sh
+go run cmd/testmatrix/main.go --project-id=opentelemetry-ops-e2e > matrix.md
+```
+
+This will fetch recent Cloud Build logs to automatically update the statuses in this matrix.
