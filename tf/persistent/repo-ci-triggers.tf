@@ -21,7 +21,7 @@ module "python" {
 module "java" {
   source     = "../modules/repo-ci-triggers"
   repository = "opentelemetry-operations-java"
-  run_on     = ["local", "gce", "gke"]
+  run_on     = ["local", "gce", "gke", "cloud-run"]
 }
 
 module "js" {
