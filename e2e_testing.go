@@ -60,16 +60,28 @@ type CloudRunCmd struct {
 	CmdWithImage
 }
 
+type CloudFunctionCmd struct {
+	CmdWithImage
+
+	// Needed to configure which language will the function instance support
+	Runtime string `arg:"required" help:"Configure the language runtime environment for CloudFunction"`
+
+	EntryPoint string `arg:"required" help:"The entry point for the code that will run in this CloudFunction"`
+
+	SourceZip string `arg:"required" help:"The name of the zip file that contains the code source that needs to run within the CloudFunction"`
+}
+
 type Args struct {
 	// This subcommand is a special case, it doesn't run any tests. It just
 	// applies the persistent resources which are used across tests. See
 	// tf/persistent/README.md for details on what is in there.
 	ApplyPersistent *ApplyPersistent `arg:"subcommand:apply-persistent" help:"Terraform apply the resources in tf/persistent and exit (does not run tests)."`
 
-	Local    *LocalCmd    `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
-	Gke      *GkeCmd      `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
-	Gce      *GceCmd      `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
-	CloudRun *CloudRunCmd `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
+	Local         *LocalCmd         `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
+	Gke           *GkeCmd           `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
+	Gce           *GceCmd           `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	CloudRun      *CloudRunCmd      `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
+	CloudFunction *CloudFunctionCmd `arg:"subcommand:cloud-function" help:"Deploy the test server on Cloud Function and execute tests"`
 
 	CmdWithProjectId
 	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
