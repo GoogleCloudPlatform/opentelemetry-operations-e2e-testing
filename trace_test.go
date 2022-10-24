@@ -238,7 +238,12 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "g.co/r/k8s_container/container_name", expectRe: `.*`},
 		)
 	case args.CloudRun != nil:
-		t.Skip("Monitored resource mapping not implemented")
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "g.co/r/cloud_run_revision/location", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "g.co/r/cloud_run_revision/service_name", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/cloud_run_revision/configuration_name", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/cloud_run_revision/revision_name", expectRe: `.*`},
+		)
 	}
 	for _, tc := range labelCases {
 		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {
