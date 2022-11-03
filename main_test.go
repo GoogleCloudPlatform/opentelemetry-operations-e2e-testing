@@ -76,8 +76,8 @@ func TestMain(m *testing.M) {
 		setupFunc = SetupGke
 	case args.CloudRun != nil:
 		setupFunc = SetupCloudRun
-	case args.CloudFunction != nil:
-		setupFunc = SetupCloudFunction
+	case args.CloudFunctionV2 != nil:
+		setupFunc = SetupCloudFunctionV2
 	}
 	client, cleanup, err := setupFunc(ctx, &args, logger)
 

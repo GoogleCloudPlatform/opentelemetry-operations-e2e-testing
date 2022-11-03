@@ -60,7 +60,7 @@ type CloudRunCmd struct {
 	CmdWithImage
 }
 
-type CloudFunctionCmd struct {
+type CloudFunctionV2Cmd struct {
 	// Needed to configure which language will the function instance support
 	Runtime string `arg:"required" help:"Configure the language runtime environment for CloudFunction"`
 
@@ -75,11 +75,11 @@ type Args struct {
 	// tf/persistent/README.md for details on what is in there.
 	ApplyPersistent *ApplyPersistent `arg:"subcommand:apply-persistent" help:"Terraform apply the resources in tf/persistent and exit (does not run tests)."`
 
-	Local         *LocalCmd         `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
-	Gke           *GkeCmd           `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
-	Gce           *GceCmd           `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
-	CloudRun      *CloudRunCmd      `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
-	CloudFunction *CloudFunctionCmd `arg:"subcommand:cloud-function" help:"Deploy the test server on Cloud Function and execute tests"`
+	Local           *LocalCmd           `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
+	Gke             *GkeCmd             `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
+	Gce             *GceCmd             `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	CloudRun        *CloudRunCmd        `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
+	CloudFunctionV2 *CloudFunctionV2Cmd `arg:"subcommand:cloud-function-v2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
 
 	CmdWithProjectId
 	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
