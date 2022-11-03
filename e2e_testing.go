@@ -61,14 +61,12 @@ type CloudRunCmd struct {
 }
 
 type CloudFunctionCmd struct {
-	CmdWithImage
-
 	// Needed to configure which language will the function instance support
 	Runtime string `arg:"required" help:"Configure the language runtime environment for CloudFunction"`
 
 	EntryPoint string `arg:"required" help:"The entry point for the code that will run in this CloudFunction"`
 
-	SourceZip string `arg:"required" help:"The name of the zip file that contains the code source that needs to run within the CloudFunction"`
+	FunctionSource string `arg:"required" help:"The name of the zip file that contains the code source that needs to run within the CloudFunction"`
 }
 
 type Args struct {
