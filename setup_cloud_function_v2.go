@@ -25,8 +25,8 @@ import (
 const cloudFunctionTfDir string = "tf/cloud-function-v2"
 
 // SetupCloudFunctionV2 sets up the instrumented test server to run in Cloud Functions (2nd Gen).
-// Creates a new Cloud Function and runs the specified source zip containing the code that needs to be run
-// as a revision. The returned cleanup function tears down everything.
+// Creates a new Cloud Function and runs the specified source zip containing the code that needs to be run.
+// The returned cleanup function tears down everything.
 func SetupCloudFunctionV2(
 	ctx context.Context,
 	args *Args,
