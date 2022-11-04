@@ -22,12 +22,12 @@ import (
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
 )
 
-const cloudFunctionTfDir string = "tf/cloud-function-v2"
+const cloudFunctionTfDir string = "tf/cloud-functions-gen2"
 
-// SetupCloudFunctionV2 sets up the instrumented test server to run in Cloud Functions (2nd Gen).
+// SetupCloudFunctionsGen2 sets up the instrumented test server to run in Cloud Functions (2nd Gen).
 // Creates a new Cloud Function and runs the specified source zip containing the code that needs to be run.
 // The returned cleanup function tears down everything.
-func SetupCloudFunctionV2(
+func SetupCloudFunctionsGen2(
 	ctx context.Context,
 	args *Args,
 	logger *log.Logger,
@@ -38,9 +38,9 @@ func SetupCloudFunctionV2(
 		args.TestRunID,
 		cloudFunctionTfDir,
 		map[string]string{
-			"runtime":        args.CloudFunctionV2.Runtime,
-			"functionsource": args.CloudFunctionV2.FunctionSource,
-			"entrypoint":     args.CloudFunctionV2.EntryPoint,
+			"runtime":        args.CloudFunctionsGen2.Runtime,
+			"functionsource": args.CloudFunctionsGen2.FunctionSource,
+			"entrypoint":     args.CloudFunctionsGen2.EntryPoint,
 		},
 		logger,
 	)

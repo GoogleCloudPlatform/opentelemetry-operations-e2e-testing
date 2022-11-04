@@ -66,7 +66,7 @@ following assumptions:
  - You have the source code for your function zipped in a file named `function-source.zip`
  - You have this zip file placed in a folder called `function-deployment` within your current directory *(from where you run this command)*
  - Your function code is written for `java11` environment.
- - The entrypoint for your function is `com.google.cloud.opentelemetry.endtoend.CloudFunctionHandler`.
+    - The entrypoint for your java function is `com.google.cloud.opentelemetry.endtoend.CloudFunctionHandler`.
 
 ```bash
 docker run \
@@ -78,7 +78,7 @@ docker run \
     -it \
     --rm \
     opentelemetry-operations-e2e-testing:local \
-    cloud-function-v2 \
+    cloud-functions-gen2 \
     --runtime=java11 \
     --functionsource="/function-source.zip" \
     --entrypoint=com.google.cloud.opentelemetry.endtoend.CloudFunctionHandler
