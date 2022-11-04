@@ -47,7 +47,7 @@ resource "google_cloudfunctions2_function" "function" {
   event_trigger {
     trigger_region = "us-central1"
     event_type     = "google.cloud.pubsub.topic.v1.messagePublished"
-    pubsub_topic   = module.pubsub.info.request_topic.topic_id    
+    pubsub_topic   = module.pubsub.info.request_topic.topic_id
     retry_policy   = "RETRY_POLICY_RETRY"
   }
 }
@@ -84,6 +84,6 @@ variable "functionsource" {
 }
 
 output "pubsub_info" {
-  value = module.pubsub.info
+  value       = module.pubsub.info
   description = "Info about the request/response pubsub topics and subscription to use in the test"
 }

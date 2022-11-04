@@ -89,7 +89,7 @@ output "info" {
   value = {
     request_topic = {
       topic_name        = google_pubsub_topic.request.name
-      topic_id          = google_pubsub_topic.request.id 
+      topic_id          = google_pubsub_topic.request.id
       subscription_name = google_pubsub_subscription.request_subscription.name
     }
 
