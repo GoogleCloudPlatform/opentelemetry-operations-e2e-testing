@@ -47,13 +47,9 @@ resource "google_cloudfunctions2_function" "function" {
   event_trigger {
     trigger_region = "us-central1"
     event_type     = "google.cloud.pubsub.topic.v1.messagePublished"
-    pubsub_topic   = google_pubsub_topic.topic.id
+    pubsub_topic   = module.pubsub.info.request_topic.topic_id
     retry_policy   = "RETRY_POLICY_RETRY"
   }
-}
-
-resource "google_pubsub_topic" "topic" {
-  name = "cloudfunctions-push-topic-${terraform.workspace}"
 }
 
 resource "google_storage_bucket" "bucket" {
@@ -88,13 +84,6 @@ variable "functionsource" {
 }
 
 output "pubsub_info" {
-  value = {
-    request_topic = {
-      topic_name        = google_pubsub_topic.topic.name
-      subscription_name = "n/a" # subscription name is not required for cloud functions
-    }
-
-    response_topic = module.pubsub.info.response_topic
-  }
+  value       = module.pubsub.info
   description = "Info about the request/response pubsub topics and subscription to use in the test"
 }
