@@ -244,6 +244,11 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "g.co/r/cloud_run_revision/configuration_name", expectRe: `.*`},
 			labelExpectation{expectKey: "g.co/r/cloud_run_revision/revision_name", expectRe: `.*`},
 		)
+	case args.CloudFunctionsGen2 != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "g.co/r/cloud_function/region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "g.co/r/cloud_function/function_name", expectRe: `.*`},
+		)
 	}
 	for _, tc := range labelCases {
 		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {

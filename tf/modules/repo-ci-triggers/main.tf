@@ -65,8 +65,8 @@ variable "run_on" {
   type        = set(string)
   description = "The GCP resources to run the tests on."
   validation {
-    condition     = alltrue([for r in var.run_on : contains(["local", "gke", "gce", "cloud-run"], r)])
-    error_message = "Variable run_on must be one of: 'local' | 'gke' | 'gce' | 'cloud-run'."
+    condition     = alltrue([for r in var.run_on : contains(["local", "gke", "gce", "cloud-run", "cloud-functions-gen2"], r)])
+    error_message = "Variable run_on must be one of: 'local' | 'gke' | 'gce' | 'cloud-run' | 'cloud-functions-gen2'."
   }
 }
 
