@@ -5,3 +5,4 @@ Right now it manages:
 
 - The GKE cluster for running test pods
 - The Cloud Build CI Triggers for each repo
+- The default service for the created GAE application
