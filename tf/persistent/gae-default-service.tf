@@ -68,5 +68,4 @@ resource "google_app_engine_flexible_app_version" "default" {
   }
 
   noop_on_destroy = true
-  service_account = "${var.project_id}@appspot.gserviceaccount.com"
 }
