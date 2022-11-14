@@ -12,33 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Enable Logs Writer permission on the service account
-resource "google_project_iam_binding" "logs_writer" {
-  project = var.project_id
-  role    = "roles/logging.logWriter"
-  members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com", 
-    ]
-}
-
-# Enable Google storage viewer on service account
-resource "google_project_iam_binding" "storage_viewer" {
-  project = var.project_id
-  role    = "roles/storage.objectViewer"
-  members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com", 
-    ]
-}
-
-# Enable the Artifact Repository pull access 
-resource "google_project_iam_binding" "registry_reader" {
-  project = var.project_id
-  role    = "roles/artifactregistry.reader"
-  members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com", 
-    ]
-}
-
 # Create the deployment for the default service in Google App Engine
 resource "google_app_engine_flexible_app_version" "default" {
   version_id = "v1"
