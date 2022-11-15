@@ -20,9 +20,6 @@
 # Docker image name - us-central1-docker.pkg.dev/opentelemetry-ops-e2e/gae-service-containers/default-service:latest
 # TODO: Automate this process
 
-FROM httpd:2.4
-
-# This configuration file is extracted from the above image and has been modified so that the server listens to port 8080 instead of port 80.
-# The steps to do this are described here - https://hub.docker.com/_/httpd
-COPY ./httpd.conf /usr/local/apache2/conf/httpd.conf
+FROM python:3-alpine
 EXPOSE 8080
+ENTRYPOINT ["python", "-m", "http.server", "8080"]

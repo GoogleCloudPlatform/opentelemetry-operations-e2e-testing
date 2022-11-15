@@ -4,9 +4,9 @@ This module is for creating resources that should be persistent across tests. Th
 
 Most of the resources used by these tests are set up and torn down for each test run. There are however some persistent resources which are managed by terraform (under [tf/persistent](../persistent/)) in the default terraform workspace:
 
-- The GKE cluster ([e2etest-default](https://pantheon.corp.google.com/kubernetes/clusters/details/us-central1/e2etest-default/details?project=opentelemetry-ops-e2e)) for running test pods.
-- The Cloud Build CI Triggers for each repo ([pantheon link](https://pantheon.corp.google.com/cloud-build/triggers?project=opentelemetry-ops-e2e)).
-- The default service for the created GAE application ([pantheon link](https://pantheon.corp.google.com/appengine/services?serviceId=default&versionId=v1&project=opentelemetry-ops-e2e)).
+- The GKE cluster (e2etest-default) for running test pods.
+- The Cloud Build CI Triggers for each repo.
+- The default service for the created GAE application.
 
 If you want to modify any of the persistent resources, update the terraform configs and [apply](#apply) them, rather than changing them directly in
 cloud console UI. If anything goes wrong, [apply](#apply) the terraform configs to get
@@ -26,10 +26,10 @@ Before you apply the persistent resources, make sure that you have built the doc
 docker build . -t opentelemetry-operations-e2e-testing:local
 ```
 
-You can run the apply-persistent command by copying the following in a shell script - 
+You can run the apply-persistent command by running the following in a terminal - 
 
+Create a function that runs the built docker image - 
 ```bash
-#!/bin/sh
 opentelemetry_operations_e2e_testing(){
   docker run \
     -e PROJECT_ID=${PROJECT_ID} \
@@ -41,16 +41,14 @@ opentelemetry_operations_e2e_testing(){
     opentelemetry-operations-e2e-testing:local \
     "$@"
 }
+```
+
+Call the function you created with the "apply-persistent" argument - 
+```bash
 opentelemetry_operations_e2e_testing apply-persistent
 ```
 
-and then executing the script using - 
-
-```
-sh <your_script_name>
-```
-
-The following environment variables should be set before executing the script - 
+The following environment variables should be set before executing the above commands - 
 1. PROJECT_ID - the unique ID of your GCP project.
 2. GOOGLE_APPLICATION_CREDENTIALS - path to the JSON file containing Google Credentials, usually it's located in - `${HOME}/.config/gcloud/application_default_credentials.json`.
 
