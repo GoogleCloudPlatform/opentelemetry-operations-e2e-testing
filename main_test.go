@@ -78,6 +78,8 @@ func TestMain(m *testing.M) {
 		setupFunc = SetupCloudRun
 	case args.CloudFunctionsGen2 != nil:
 		setupFunc = SetupCloudFunctionsGen2
+	case args.Gae != nil:
+		setupFunc = SetupGae
 	}
 	client, cleanup, err := setupFunc(ctx, &args, logger)
 

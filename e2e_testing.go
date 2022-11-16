@@ -56,6 +56,12 @@ type GkeCmd struct {
 	CmdWithImage
 }
 
+type GaeCmd struct {
+	CmdWithImage
+
+	Runtime string `arg:"required" help:"The language runtime for the instrumented test server, used in naming the service"`
+}
+
 type CloudRunCmd struct {
 	CmdWithImage
 }
@@ -78,6 +84,7 @@ type Args struct {
 	Local              *LocalCmd              `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
 	Gke                *GkeCmd                `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
 	Gce                *GceCmd                `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	Gae                *GaeCmd                `arg:"subcommand:gae" help:"Deploy the test server on GAE and execute tests"`
 	CloudRun           *CloudRunCmd           `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
 	CloudFunctionsGen2 *CloudFunctionsGen2Cmd `arg:"subcommand:cloud-functions-gen2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
 

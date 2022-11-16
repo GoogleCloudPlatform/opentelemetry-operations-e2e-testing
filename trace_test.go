@@ -249,6 +249,16 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "g.co/r/cloud_function/region", expectRe: `.*-.*`},
 			labelExpectation{expectKey: "g.co/r/cloud_function/function_name", expectRe: `.*`},
 		)
+	case args.Gae != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "g.co/r/gae_instance/module_id", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/gae_instance/version_id", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/gae_instance/instance_id", expectRe: `.*`},
+			labelExpectation{expectKey: "g.co/r/gae_instance/location", expectRe: `.*-.*`},
+		)
+	default:
+		t.Logf("Unexpected GCP environment provided. Make sure to add handling for all expected GCP environments.")
+		t.FailNow()
 	}
 	for _, tc := range labelCases {
 		t.Run(fmt.Sprintf("Span has label %v", tc.expectKey), func(t *testing.T) {
