@@ -42,21 +42,21 @@ resource "google_app_engine_flexible_app_version" "test_service" {
     cpu_utilization {
       target_utilization = 0.9
     }
-    max_total_instances = 1 
-    min_total_instances = 1 
+    max_total_instances = 1
+    min_total_instances = 1
   }
 
   env_variables = {
-    "PUSH_PORT" = "8080",
+    "PUSH_PORT"                 = "8080",
     "REQUEST_SUBSCRIPTION_NAME" = module.pubsub.info.request_topic.subscription_name,
-    "RESPONSE_TOPIC_NAME" = module.pubsub.info.response_topic.topic_name,
-    "PROJECT_ID" = var.project_id,
-    "SUBSCRIPTION_MODE" = "push"
+    "RESPONSE_TOPIC_NAME"       = module.pubsub.info.response_topic.topic_name,
+    "PROJECT_ID"                = var.project_id,
+    "SUBSCRIPTION_MODE"         = "push"
   }
 
-  noop_on_destroy = false
+  noop_on_destroy           = false
   delete_service_on_destroy = true
-  service_account = "${var.project_id}@appspot.gserviceaccount.com"
+  service_account           = "${var.project_id}@appspot.gserviceaccount.com"
 }
 
 module "pubsub" {
@@ -78,7 +78,7 @@ variable "image" {
 }
 
 variable "runtime" {
-    type = string
+  type = string
 }
 
 output "pubsub_info" {
