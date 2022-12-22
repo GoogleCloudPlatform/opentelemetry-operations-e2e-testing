@@ -62,7 +62,7 @@ resource "google_storage_bucket_object" "object" {
   name   = "function-source.zip"
   bucket = google_storage_bucket.bucket.name
   # Add path to the zipped function source code, source file zip should be in the bucket
-  source = "${var.functionsource}"
+  source = var.functionsource
 }
 
 module "pubsub" {
