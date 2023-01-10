@@ -17,7 +17,7 @@ resource "google_cloud_run_service" "default" {
   location = "us-central1"
 
   timeouts {
-    create = "1m"
+    create = "6m"
   }
 
   template {
