@@ -13,14 +13,28 @@
 	</thead>
 	<tbody>
 			<tr>
-				<td rowspan=4>
+				<td rowspan=6>
 					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-go">opentelemetry-operations-go</a>
 				</td>
+				<td>cloud-functions-gen2</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
 				<td>cloud-run</td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>gae</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>gce</td>
@@ -44,14 +58,28 @@
 					<td>:leftwards_arrow_with_hook:</td>
 			</tr>
 			<tr>
-				<td rowspan=4>
+				<td rowspan=6>
 					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-java">opentelemetry-operations-java</a>
 				</td>
+				<td>cloud-functions-gen2</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
 				<td>cloud-run</td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>gae</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>gce</td>
@@ -75,10 +103,24 @@
 					<td>:leftwards_arrow_with_hook:</td>
 			</tr>
 			<tr>
-				<td rowspan=4>
+				<td rowspan=6>
 					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-js">opentelemetry-operations-js</a>
 				</td>
+				<td>cloud-functions-gen2</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
 				<td>cloud-run</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>gae</td>
 					<td></td>
 					<td></td>
 					<td></td>
@@ -89,30 +131,44 @@
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
-					<td></td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>gke</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
-					<td></td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>local</td>
 					<td>:leftwards_arrow_with_hook:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
+					<td>:leftwards_arrow_with_hook:</td>
+			</tr>
+			<tr>
+				<td rowspan=6>
+					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-python">opentelemetry-operations-python</a>
+				</td>
+				<td>cloud-functions-gen2</td>
+					<td></td>
+					<td></td>
+					<td></td>
 					<td></td>
 			</tr>
 			<tr>
-				<td rowspan=4>
-					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-python">opentelemetry-operations-python</a>
-				</td>
 				<td>cloud-run</td>
-					<td>:white_check_mark:</td>
-					<td>:white_check_mark:</td>
-					<td>:white_check_mark:</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+			</tr>
+			<tr>
+				<td>gae</td>
+					<td></td>
+					<td></td>
+					<td></td>
 					<td></td>
 			</tr>
 			<tr>

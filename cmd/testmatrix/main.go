@@ -216,6 +216,10 @@ func handleTrigger(
 	if err != nil {
 		return nil, err
 	}
+	if len(listRes.Builds) == 0 {
+		log.Printf("trigger %v had no successful builds, skipping the trigger", trigger.Name)
+		return res, nil
+	}
 
 	build := listRes.Builds[0]
 	reader, err := storageClient.Bucket(strings.TrimPrefix(build.LogsBucket, "gs://")).
