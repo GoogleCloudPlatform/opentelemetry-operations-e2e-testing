@@ -226,11 +226,21 @@ func TestResourceDetectionTrace(t *testing.T) {
 		t.Skip("Local runs do not need to test resource detection")
 	case args.Gce != nil:
 		labelCases = append(labelCases,
-			labelExpectation{expectKey: "g.co/r/gce_instance/zone", expectRe: `.*-.*-.*`},
-			labelExpectation{expectKey: "g.co/r/gce_instance/instance_id", expectRe: `.*`},
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_compute_engine`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "cloud.availability_zone", expectRe: `.*-.*-.*`},
+			labelExpectation{expectKey: "host.id", expectRe: `.*`},
 		)
 	case args.Gke != nil:
 		labelCases = append(labelCases,
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_kubernetes_engine`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "k8s.cluster.name", expectRe: `.*`},
+			labelExpectation{expectKey: "k8s.namespace.name", expectRe: `.*`},
+			labelExpectation{expectKey: "k8s.pod.name", expectRe: `.*`},
+			labelExpectation{expectKey: "k8s.container.name", expectRe: `.*`},
 			labelExpectation{expectKey: "g.co/r/k8s_container/location", expectRe: `.*-.*`},
 			labelExpectation{expectKey: "g.co/r/k8s_container/cluster_name", expectRe: `.*`},
 			labelExpectation{expectKey: "g.co/r/k8s_container/namespace_name", expectRe: `.*`},
@@ -239,22 +249,31 @@ func TestResourceDetectionTrace(t *testing.T) {
 		)
 	case args.CloudRun != nil:
 		labelCases = append(labelCases,
-			labelExpectation{expectKey: "g.co/r/cloud_run_revision/location", expectRe: `.*-.*`},
-			labelExpectation{expectKey: "g.co/r/cloud_run_revision/service_name", expectRe: `.*`},
-			labelExpectation{expectKey: "g.co/r/cloud_run_revision/configuration_name", expectRe: `.*`},
-			labelExpectation{expectKey: "g.co/r/cloud_run_revision/revision_name", expectRe: `.*`},
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_cloud_run`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.id", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
 	case args.CloudFunctionsGen2 != nil:
 		labelCases = append(labelCases,
-			labelExpectation{expectKey: "g.co/r/cloud_function/region", expectRe: `.*-.*`},
-			labelExpectation{expectKey: "g.co/r/cloud_function/function_name", expectRe: `.*`},
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_cloud_functions`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.id", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
 	case args.Gae != nil:
 		labelCases = append(labelCases,
-			labelExpectation{expectKey: "g.co/r/gae_instance/module_id", expectRe: `.*`},
-			labelExpectation{expectKey: "g.co/r/gae_instance/version_id", expectRe: `.*`},
-			labelExpectation{expectKey: "g.co/r/gae_instance/instance_id", expectRe: `.*`},
-			labelExpectation{expectKey: "g.co/r/gae_instance/location", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_app_engine`},
+			labelExpectation{expectKey: "cloud.availability_zone", expectRe: `.*-.*-.*`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.id", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
 	default:
 		t.Logf("Unexpected GCP environment provided. Make sure to add handling for all expected GCP environments.")
