@@ -241,6 +241,8 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "k8s.namespace.name", expectRe: `.*`},
 			labelExpectation{expectKey: "k8s.pod.name", expectRe: `.*`},
 			labelExpectation{expectKey: "k8s.container.name", expectRe: `.*`},
+			// Check for cannonical labels for GKE:
+			// https://cloud.google.com/trace/docs/trace-labels#canonical-gke
 			labelExpectation{expectKey: "g.co/r/k8s_container/location", expectRe: `.*-.*`},
 			labelExpectation{expectKey: "g.co/r/k8s_container/cluster_name", expectRe: `.*`},
 			labelExpectation{expectKey: "g.co/r/k8s_container/namespace_name", expectRe: `.*`},
