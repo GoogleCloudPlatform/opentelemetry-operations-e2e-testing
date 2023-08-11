@@ -255,7 +255,7 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_cloud_run`},
 			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
 			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
-			labelExpectation{expectKey: "faas.id", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
 			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
 	case args.CloudFunctionsGen2 != nil:
@@ -264,7 +264,7 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_cloud_functions`},
 			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
 			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
-			labelExpectation{expectKey: "faas.id", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
 			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
 	case args.Gae != nil:
@@ -274,7 +274,7 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "cloud.availability_zone", expectRe: `.*-.*-.*`},
 			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
 			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
-			labelExpectation{expectKey: "faas.id", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
 			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
 	default:
