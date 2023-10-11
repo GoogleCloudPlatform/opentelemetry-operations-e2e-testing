@@ -31,9 +31,8 @@ require (
 	github.com/sethvargo/go-retry v0.1.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sync v0.1.0
 	google.golang.org/api v0.50.0
 	google.golang.org/genproto v0.0.0-20210708141623-e76da96a951f
 )
