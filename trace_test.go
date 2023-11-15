@@ -77,7 +77,7 @@ func getTraceWithRetry(
 		var err error
 		trace, err = cloudtraceService.Projects.Traces.Get(args.ProjectID, traceId).Context(ctx).Do()
 		if err != nil {
-			t.Logf("Retrying GetTrace: %v", err)
+			t.Logf("Retrying GetTrace(%v): %v", traceId, err)
 			return retry.RetryableError(err)
 		}
 		return nil
