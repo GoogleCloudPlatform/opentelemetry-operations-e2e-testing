@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
@@ -90,8 +89,8 @@ func SetupLocal(
 
 	cleanup := func() {
 		logger.Printf("Stopping and removing container ID %v\n", containerID)
-		timeout := (time.Second * 15)
-		err = cli.ContainerStop(ctx, containerID, &timeout)
+		timeout := 15
+		err = cli.ContainerStop(ctx, containerID, container.StopOptions{Timeout: &timeout})
 		defer removeContainer()
 		if err != nil {
 			logger.Panic(err)
@@ -116,7 +115,7 @@ func createContainer(
 	args *Args,
 	pubsubInfo *setuptf.PubsubInfo,
 	logger *log.Logger,
-) (container.ContainerCreateCreatedBody, error) {
+) (container.CreateResponse, error) {
 	env := []string{
 		"PORT=" + args.Local.Port,
 		"PROJECT_ID=" + args.ProjectID,
