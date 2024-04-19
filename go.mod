@@ -34,7 +34,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/sethvargo/go-retry v0.1.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.1.0
 	google.golang.org/api v0.50.0
 	google.golang.org/genproto v0.0.0-20210708141623-e76da96a951f
