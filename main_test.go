@@ -80,6 +80,8 @@ func TestMain(m *testing.M) {
 		setupFunc = SetupCloudFunctionsGen2
 	case args.Gae != nil:
 		setupFunc = SetupGae
+	case args.GaeStandard != nil:
+		setupFunc = SetupGaeStandard
 	}
 	client, cleanup, err := setupFunc(ctx, &args, logger)
 
