@@ -277,6 +277,18 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
 			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
+	case args.GaeStandard != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_app_engine`},
+			// GAE standard zones do not use the regular consistent GCP public zone names, but
+			// this regex verifies that the "/" characters are stripped away
+			labelExpectation{expectKey: "cloud.availability_zone", expectRe: `[\w\-]+`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
+		)
 	default:
 		t.Logf("Unexpected GCP environment provided. Make sure to add handling for all expected GCP environments.")
 		t.FailNow()
