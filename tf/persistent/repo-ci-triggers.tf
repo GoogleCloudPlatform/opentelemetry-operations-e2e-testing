@@ -33,5 +33,5 @@ module "js" {
 module "go" {
   source     = "../modules/repo-ci-triggers"
   repository = "opentelemetry-operations-go"
-  run_on     = ["local", "gce", "gke", "gae", "cloud-run", "cloud-functions-gen2"]
+  run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
 }
