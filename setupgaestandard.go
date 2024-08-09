@@ -35,8 +35,9 @@ func SetupGaeStandard(
 		args.TestRunID,
 		gaeStandardTfDir,
 		map[string]string{
-			"runtime":   args.GaeStandard.Runtime,
-			"appsource": args.GaeStandard.AppSource,
+			"runtime":    args.GaeStandard.Runtime,
+			"appsource":  args.GaeStandard.AppSource,
+			"entrypoint": args.GaeStandard.Entrypoint,
 		},
 		logger,
 	)

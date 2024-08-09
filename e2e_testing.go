@@ -63,8 +63,9 @@ type GaeCmd struct {
 }
 
 type GaeStandardCmd struct {
-	Runtime   string `arg:"required" help:"The language runtime for the instrumented test server, used in naming the service"`
-	AppSource string `arg:"required" help:"The full path of the zip file that contains the source code to run in GAE"`
+	Runtime    string `arg:"required" help:"The language runtime for the instrumented test server, used in naming the service"`
+	AppSource  string `arg:"required" help:"The full path of the zip file that contains the source code to run in GAE"`
+	Entrypoint string `help:"Optional entrypoint to control how GAE starts the application. See https://cloud.google.com/appengine/docs/standard/reference/app-yaml#entrypoint"`
 }
 
 type CloudRunCmd struct {
