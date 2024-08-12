@@ -20,7 +20,7 @@
 resource "google_app_engine_flexible_app_version" "test_service" {
   version_id = "v1"
   project    = var.project_id
-  service    = "test-service-${var.runtime}-${terraform.workspace}"
+  service    = "flex-${var.runtime}-${terraform.workspace}"
   runtime    = "custom"
 
   deployment {

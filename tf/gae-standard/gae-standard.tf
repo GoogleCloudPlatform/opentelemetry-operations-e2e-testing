@@ -21,7 +21,7 @@ resource "google_app_engine_standard_app_version" "test_service" {
 
   version_id = "v1"
   project    = var.project_id
-  service    = "test-standard-service-${var.runtime}-${terraform.workspace}"
+  service    = "standard-${var.runtime}-${terraform.workspace}"
   runtime    = var.runtime
 
   deployment {
@@ -32,9 +32,9 @@ resource "google_app_engine_standard_app_version" "test_service" {
     }
   }
 
-  // Required, but leave empty to fall back to the runtime default
+  // Required, but if variable is unset (empty string), fall back to the runtime default
   entrypoint {
-    shell = ""
+    shell = var.entrypoint
   }
 
   env_variables = {
@@ -82,6 +82,11 @@ variable "appsource" {
 
 variable "runtime" {
   type = string
+}
+
+variable "entrypoint" {
+  type = string
+  default = ""
 }
 
 output "pubsub_info" {
