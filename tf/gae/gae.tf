@@ -44,6 +44,7 @@ resource "google_app_engine_flexible_app_version" "test_service" {
       target_utilization = 0.9
     }
     max_total_instances = 1
+    min_total_instances = 0
   }
 
   env_variables = {
