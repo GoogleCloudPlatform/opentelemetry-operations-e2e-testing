@@ -14,14 +14,15 @@
 
 # Create the deployment for the default service in Google App Engine
 resource "google_app_engine_flexible_app_version" "default" {
-  version_id = "v1"
-  project    = var.project_id
-  service    = "default"
-  runtime    = "custom"
+  version_id      = "v1"
+  project         = var.project_id
+  service         = "default"
+  runtime         = "custom"
+  service_account = "${var.project_id}@appspot.gserviceaccount.com"
 
   deployment {
     container {
-      image = "us-central1-docker.pkg.dev/${var.project_id}/gae-service-containers/default-service:latest"
+      image = "us-central1-docker.pkg.dev/${var.project_id}/gae-service-containers/default-service@sha256:70dccd7bdd8e0671fa40283be19fb5a4e4134d0cbaf1cb0d295081c05bdad34b"
     }
   }
 

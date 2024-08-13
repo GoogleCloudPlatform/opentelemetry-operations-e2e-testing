@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This Dockerfile is used to generate a docker image that runs an Apache Server.
-# The Apache server is used to run a dummy default service for the Google App Engine for opentelemetry-ops-e2e project. 
-# The server listens at port 8080 (since this is the port which GAE listens to).
+# This docker image should currently be built manually and pushed to a proper location in the
+# artifact repository Docker image name -
+# us-central1-docker.pkg.dev/${PROJECT_ID}/gae-service-containers/default-service:latest
 
-# This docker image should currently be built manually and pushed to a proper location in the artifact repository
-# Docker image name - us-central1-docker.pkg.dev/opentelemetry-ops-e2e/gae-service-containers/default-service:latest
-# TODO: Automate this process
-
-FROM python:3-alpine
+FROM golang:1.22 as build
 EXPOSE 8080
-ENTRYPOINT ["python", "-m", "http.server", "8080"]
+COPY main.go .
+RUN CGO_ENABLED=0 go build -o /main main.go
+
+FROM scratch
+COPY --from=build /main /main
+ENTRYPOINT ["/main"]
