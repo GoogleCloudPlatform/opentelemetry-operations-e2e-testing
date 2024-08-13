@@ -42,3 +42,11 @@ resource "google_app_engine_flexible_app_version" "default" {
 
   noop_on_destroy = true
 }
+
+# Block all external traffic
+resource "google_app_engine_service_network_settings" "default" {
+  service = google_app_engine_flexible_app_version.default.service
+  network_settings {
+    ingress_traffic_allowed = "INGRESS_TRAFFIC_ALLOWED_INTERNAL_ONLY"
+  }
+}
