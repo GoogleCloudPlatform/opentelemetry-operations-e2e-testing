@@ -37,6 +37,14 @@ resource "google_app_engine_standard_app_version" "test_service" {
     shell = var.entrypoint
   }
 
+  // Limit resources and QPS
+  automatic_scaling {
+    max_concurrent_requests = 5
+    standard_scheduler_settings {
+      max_instances = 1
+    }
+  }
+
   env_variables = {
     "PUSH_PORT"                 = "8080",
     "REQUEST_SUBSCRIPTION_NAME" = module.pubsub.info.request_topic.subscription_name,
