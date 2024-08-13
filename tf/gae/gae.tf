@@ -37,13 +37,13 @@ resource "google_app_engine_flexible_app_version" "test_service" {
     path = "/ready"
   }
 
+  // Limit resources and QPS
   automatic_scaling {
-    cool_down_period = "120s"
+    max_concurrent_requests = 5
     cpu_utilization {
       target_utilization = 0.9
     }
     max_total_instances = 1
-    min_total_instances = 1
   }
 
   env_variables = {
