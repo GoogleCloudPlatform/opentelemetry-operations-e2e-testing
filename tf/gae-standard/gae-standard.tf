@@ -85,7 +85,7 @@ variable "runtime" {
 }
 
 variable "entrypoint" {
-  type = string
+  type    = string
   default = ""
 }
 
