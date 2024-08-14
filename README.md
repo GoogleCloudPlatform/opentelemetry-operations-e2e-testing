@@ -28,7 +28,7 @@ GOOGLE_APPLICATION_CREDENTIALS="${HOME}/.config/gcloud/application_default_crede
 
 # Using a recent python build for example. Alternatively, use a locally built
 # test server.
-INSTRUMENTED_TEST_SERVER="gcr.io/opentelemetry-ops-e2e/opentelemetry-operations-python-e2e-test-server:45ccd1d"
+INSTRUMENTED_TEST_SERVER="us-central1-docker.pkg.dev/opentelemetry-ops-e2e/e2e-testing/opentelemetry-operations-python-e2e-test-server:45ccd1d"
 
 # Pull the image if it doesn't exist locally
 docker pull ${INSTRUMENTED_TEST_SERVER}
