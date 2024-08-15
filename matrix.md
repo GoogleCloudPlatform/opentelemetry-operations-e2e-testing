@@ -173,31 +173,31 @@
 					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-python">opentelemetry-operations-python</a>
 				</td>
 				<td>cloud-functions-gen2</td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>cloud-run</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
 					<td>:white_check_mark:</td>
-					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>gae</td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>gae-standard</td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
 			</tr>
 			<tr>
 				<td>gce</td>
