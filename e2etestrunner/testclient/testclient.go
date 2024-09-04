@@ -21,7 +21,7 @@ import (
 	"strconv"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
 	"google.golang.org/genproto/googleapis/rpc/code"
 )
 

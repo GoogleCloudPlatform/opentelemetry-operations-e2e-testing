@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+package e2etestrunner
 
 import (
 	"context"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 )
 
-const gaeTfDir string = "tf/gae"
+const cloudRunTfDir string = "tf/cloud-run"
 
-func SetupGae(
+// SetupCloudRun sets up the instrumented test server to run in Cloud Run.
+// Creates a new service and runs the specified container image as a revision.
+// The returned cleanup function tears down everything.
+func SetupCloudRun(
 	ctx context.Context,
 	args *Args,
 	logger *log.Logger,
@@ -33,10 +36,9 @@ func SetupGae(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		gaeTfDir,
+		cloudRunTfDir,
 		map[string]string{
-			"image":   args.Gae.Image,
-			"runtime": args.Gae.Runtime,
+			"image": args.CloudRun.Image,
 		},
 		logger,
 	)

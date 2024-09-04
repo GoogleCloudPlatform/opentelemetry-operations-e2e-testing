@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+package e2etestrunner
 
 import (
 	"context"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 )
 
-const cloudRunTfDir string = "tf/cloud-run"
+const gkeTfDir string = "tf/gke"
 
-// SetupCloudRun sets up the instrumented test server to run in Cloud Run.
-// Creates a new service and runs the specified container image as a revision.
-// The returned cleanup function tears down everything.
-func SetupCloudRun(
+// Set up the instrumented test server to run in GKE. Creates a new GKE cluster
+// and runs the specified container image in a pod. The returned cleanup
+// function tears down the whole cluster.
+func SetupGke(
 	ctx context.Context,
 	args *Args,
 	logger *log.Logger,
@@ -36,9 +36,9 @@ func SetupCloudRun(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		cloudRunTfDir,
+		gkeTfDir,
 		map[string]string{
-			"image": args.CloudRun.Image,
+			"image": args.Gke.Image,
 		},
 		logger,
 	)
