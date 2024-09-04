@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+package e2etestrunner
 
 import (
 	"context"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 )
 
-const gceTfDir string = "tf/gce"
+const gaeStandardTfDir string = "tf/gae-standard"
 
-// Set up the instrumented test server to run in GCE container. Creates a new
-// GCE VM + pubsub resources, and runs the specified container image. The
-// returned cleanup function tears down the VM.
-func SetupGce(
+func SetupGaeStandard(
 	ctx context.Context,
 	args *Args,
 	logger *log.Logger,
@@ -36,9 +33,11 @@ func SetupGce(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		gceTfDir,
+		gaeStandardTfDir,
 		map[string]string{
-			"image": args.Gce.Image,
+			"runtime":    args.GaeStandard.Runtime,
+			"appsource":  args.GaeStandard.AppSource,
+			"entrypoint": args.GaeStandard.Entrypoint,
 		},
 		logger,
 	)

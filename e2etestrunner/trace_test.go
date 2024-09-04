@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+// Only build as part of e2e tests, not regular go test invocations
+//go:build e2e
+
+package e2etestrunner
 
 import (
 	"context"
@@ -26,7 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 	"github.com/sethvargo/go-retry"
 	cloudtrace "google.golang.org/api/cloudtrace/v1"
 	"google.golang.org/genproto/googleapis/rpc/code"

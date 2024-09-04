@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+package e2etestrunner
 
 import (
 	"context"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 )
 
-const gaeStandardTfDir string = "tf/gae-standard"
+const gaeTfDir string = "tf/gae"
 
-func SetupGaeStandard(
+func SetupGae(
 	ctx context.Context,
 	args *Args,
 	logger *log.Logger,
@@ -33,11 +33,10 @@ func SetupGaeStandard(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		gaeStandardTfDir,
+		gaeTfDir,
 		map[string]string{
-			"runtime":    args.GaeStandard.Runtime,
-			"appsource":  args.GaeStandard.AppSource,
-			"entrypoint": args.GaeStandard.Entrypoint,
+			"image":   args.Gae.Image,
+			"runtime": args.Gae.Runtime,
 		},
 		logger,
 	)

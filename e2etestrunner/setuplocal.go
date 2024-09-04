@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+package e2etestrunner
 
 import (
 	"context"
@@ -20,8 +20,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"

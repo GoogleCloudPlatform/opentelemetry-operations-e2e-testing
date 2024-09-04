@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e_testing
+// Only build as part of e2e tests, not regular go test invocations
+//go:build e2e
+
+package e2etestrunner
 
 import (
 	"context"
@@ -24,8 +27,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/setuptf"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 	"github.com/alexflint/go-arg"
 )
 

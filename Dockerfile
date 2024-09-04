@@ -20,7 +20,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 go test -c
+RUN CGO_ENABLED=0 go test -tags=e2e -c ./e2etestrunner -o opentelemetry-operations-e2e-testing.test
 
 FROM hashicorp/terraform:light as tfbuild
 COPY tf /src/tf

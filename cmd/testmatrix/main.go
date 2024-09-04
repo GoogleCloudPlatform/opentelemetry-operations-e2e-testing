@@ -33,7 +33,7 @@ import (
 	"strings"
 
 	"cloud.google.com/go/storage"
-	e2e_testing "github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner"
 	"github.com/alexflint/go-arg"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/cloudbuild/v1"
@@ -88,7 +88,7 @@ This will fetch recent Cloud Build logs to automatically update the statuses in 
 )
 
 type Args struct {
-	e2e_testing.CmdWithProjectId
+	e2etestrunner.CmdWithProjectId
 }
 
 type status string
@@ -106,7 +106,7 @@ var (
 )
 
 func main() {
-	args := Args{}
+	args := e2etestrunner.Args{}
 	arg.MustParse(&args)
 
 	ctx := context.Background()
