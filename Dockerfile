@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.20 AS gobuild
+FROM golang:1.23 AS gobuild
 WORKDIR /src
 
 # cache deps before copying source so that we don't re-download as much
