@@ -22,7 +22,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
@@ -76,13 +75,13 @@ func SetupLocal(
 	containerID := createdRes.ID
 	removeContainer := func() {
 		defer cleanupTf()
-		err = cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{Force: true})
+		err = cli.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true})
 		if err != nil {
 			logger.Panic(err)
 		}
 	}
 
-	err = cli.ContainerStart(ctx, containerID, types.ContainerStartOptions{})
+	err = cli.ContainerStart(ctx, containerID, container.StartOptions{})
 	if err != nil {
 		return nil, removeContainer, err
 	}
@@ -164,7 +163,7 @@ func startForwardingContainerLogs(
 	reader, err := cli.ContainerLogs(
 		ctx,
 		containerID,
-		types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true, Follow: true},
+		container.LogsOptions{ShowStdout: true, ShowStderr: true, Follow: true},
 	)
 	if err != nil {
 		return err
