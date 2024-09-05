@@ -17,10 +17,13 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.23"
+      - name: List packages in go workspace
+        run: echo "packages=$(go list -f '{{.Dir}}/...' -m | xargs)" >> $GITHUB_OUTPUT
+        id: packages
       - name: Build
-        run: go build -v ./...
+        run: go build -v ${{steps.packages.outputs.packages}}
       - name: Test
-        run: go test -v ./...
+        run: go test -v ${{steps.packages.outputs.packages}}
 
   build-docker-image:
     runs-on: ubuntu-latest
