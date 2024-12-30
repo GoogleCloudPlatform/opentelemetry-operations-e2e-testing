@@ -21,8 +21,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN set -x; if [ "$BUILD_TAGS" = "e2ecollector" ]; then BUILD_DIRECTORY="e2etestrunner-collector"; fi; CGO_ENABLED=0 go test -timeout 3600s -tags=$BUILD_TAGS -c "./$BUILD_DIRECTORY" -o opentelemetry-operations-e2e-testing.test
-#RUN CGO_ENABLED=0 go test -tags=e2ecollector -c ./e2etestrunner-collector -o opentelemetry-operations-e2e-testing.test
+RUN set -x; if [ "$BUILD_TAGS" = "e2ecollector" ]; then BUILD_DIRECTORY="e2etestrunner-collector"; else BUILD_TAGS="e2e"; BUILD_DIRECTORY="e2etestrunner"; fi; CGO_ENABLED=0 go test -timeout 3600s -tags=$BUILD_TAGS -c "./$BUILD_DIRECTORY" -o opentelemetry-operations-e2e-testing.test
 
 FROM hashicorp/terraform:light as tfbuild
 COPY tf /src/tf

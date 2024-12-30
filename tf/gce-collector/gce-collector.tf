@@ -71,10 +71,6 @@ module "otel_config" {
   test_run_id = terraform.workspace
 }
 
-locals {
-  config_path = "/etc/otelcol-contrib/config.yaml"
-}
-
 variable "image" {
   type = string
 }
