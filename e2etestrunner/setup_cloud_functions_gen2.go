@@ -16,9 +16,10 @@ package e2etestrunner
 
 import (
 	"context"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 )
 
@@ -29,9 +30,9 @@ const cloudFunctionTfDir string = "tf/cloud-functions-gen2"
 // The returned cleanup function tears down everything.
 func SetupCloudFunctionsGen2(
 	ctx context.Context,
-	args *Args,
+	args *util.Args,
 	logger *log.Logger,
-) (*testclient.Client, Cleanup, error) {
+) (*testclient.Client, util.Cleanup, error) {
 	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,

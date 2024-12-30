@@ -1,0 +1,10 @@
+steps:
+- name: ${E2E_PROJECT}
+  env: ["PROJECT_ID=$PROJECT_ID"]
+  dir: /
+  args:
+  - gke-collector
+  - --image=${COLLECTOR_PROJECT}
+substitutions:
+  E2E_PROJECT: ''
+  COLLECTOR_PROJECT: ''
