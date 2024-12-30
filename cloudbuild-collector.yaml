@@ -24,6 +24,7 @@ steps:
   - --tag=${_TEST_RUNNER_IMAGE_NAME}:${_DOCKER_TAG}
   - --tag=${_TEST_RUNNER_IMAGE_NAME}:latest
   - --build-arg=BUILDKIT_INLINE_CACHE=1
+  - --build-arg=BUILD_TAGS=e2ecollector
   - --cache-from=${_TEST_RUNNER_IMAGE_NAME}:latest
   - .
 
