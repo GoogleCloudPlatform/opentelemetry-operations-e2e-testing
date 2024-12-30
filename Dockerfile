@@ -14,13 +14,14 @@
 
 FROM golang:1.23 AS gobuild
 WORKDIR /src
+ARG BUILD_TAGS
 
 # cache deps before copying source so that we don't re-download as much
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 go test -tags=e2e -c ./e2etestrunner -o opentelemetry-operations-e2e-testing.test
+RUN set -x; if [ "$BUILD_TAGS" = "e2ecollector" ]; then BUILD_DIRECTORY="e2etestrunner-collector"; else BUILD_TAGS="e2e"; BUILD_DIRECTORY="e2etestrunner"; fi; CGO_ENABLED=0 go test -timeout 3600s -tags=$BUILD_TAGS -c "./$BUILD_DIRECTORY" -o opentelemetry-operations-e2e-testing.test
 
 FROM hashicorp/terraform:light as tfbuild
 COPY tf /src/tf

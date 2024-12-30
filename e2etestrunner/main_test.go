@@ -20,6 +20,8 @@ package e2etestrunner
 import (
 	"context"
 	"flag"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
 	"log"
 	"math/rand"
 	"os"
@@ -27,13 +29,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 	"github.com/alexflint/go-arg"
 )
 
 var (
-	args             Args
+	args             util.Args
 	testServerClient *testclient.Client
 )
 
@@ -62,14 +63,14 @@ func TestMain(m *testing.M) {
 
 	// handle any complex defaults
 	if args.TestRunID == "" {
-		hex, err := randomHex(6)
+		hex, err := util.RandomHex(6)
 		if err != nil {
 			logger.Fatalf("error generating random hex string: %v\n", err)
 		}
 		args.TestRunID = hex
 	}
 
-	var setupFunc SetupFunc
+	var setupFunc util.SetupFunc
 	switch {
 	case args.Local != nil:
 		setupFunc = SetupLocal
@@ -106,7 +107,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Run tests
-	logger.Print(BeginOutputArt)
+	logger.Print(util.BeginOutputArt)
 	m.Run()
-	logger.Print(EndOutputArt)
+	logger.Print(util.EndOutputArt)
 }

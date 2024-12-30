@@ -17,11 +17,11 @@ package testclient
 import (
 	"context"
 	"fmt"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
 	"log"
 	"strconv"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
 	"google.golang.org/genproto/googleapis/rpc/code"
 )
 

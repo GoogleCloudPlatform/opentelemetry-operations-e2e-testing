@@ -12,41 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2etestrunner
+package e2etestrunner_collector
 
 import (
 	"context"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
 	"log"
-
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 )
 
-const gceTfDir string = "tf/gce"
+const gceCollectorTfDir string = "tf/gce-collector"
 
-// Set up the instrumented test server to run in GCE container. Creates a new
-// GCE VM + pubsub resources, and runs the specified container image. The
+// SetupGceCollector Set up the collector to run in GCE container. Creates a new
+// GCE VM resources, and runs the specified container image. The
 // returned cleanup function tears down the VM.
-func SetupGce(
+func SetupGceCollector(
 	ctx context.Context,
 	args *util.Args,
 	logger *log.Logger,
-) (*testclient.Client, util.Cleanup, error) {
-	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
+) (util.Cleanup, error) {
+	_, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		gceTfDir,
+		gceCollectorTfDir,
 		map[string]string{
-			"image": args.Gce.Image,
+			"image": args.GceCollector.Image,
 		},
 		logger,
 	)
 	if err != nil {
-		return nil, cleanupTf, err
+		return cleanupTf, err
 	}
 
-	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)
-	return client, cleanupTf, err
+	return cleanupTf, err
 }
