@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	tfPersistentDir                  = "tf/persistent"
-	Push            SubscriptionMode = "push"
-	Pull            SubscriptionMode = "pull"
+	tfPersistentDir                           = "tf/persistent"
+	tfPersistentCollectorDir                  = "tf/persistent-collector"
+	Push                     SubscriptionMode = "push"
+	Pull                     SubscriptionMode = "pull"
 )
 
 type SubscriptionMode string
@@ -155,18 +156,37 @@ func SetupTf(
 	return &tfOutput.PubsubInfoWrapper.Value, cleanup, nil
 }
 
-// Create persistent resources (in tf/persistent) that are used across tests. No
-// cleanup is required
 func ApplyPersistent(
 	ctx context.Context,
 	projectID string,
 	autoApprove bool,
 	logger *log.Logger,
 ) error {
+	return applyPersistent(ctx, projectID, autoApprove, logger, tfPersistentDir)
+}
+
+func ApplyPersistentCollector(
+	ctx context.Context,
+	projectID string,
+	autoApprove bool,
+	logger *log.Logger,
+) error {
+	return applyPersistent(ctx, projectID, autoApprove, logger, tfPersistentCollectorDir)
+}
+
+// Create persistent resources (in tf/persistent) that are used across tests. No
+// cleanup is required
+func applyPersistent(
+	ctx context.Context,
+	projectID string,
+	autoApprove bool,
+	logger *log.Logger,
+	persistentDir string,
+) error {
 	logger.Println("Applying any changes to persistent resources")
 	// Run terraform init
 	cmd := initCommand(ctx, projectID)
-	cmd.Dir = tfPersistentDir
+	cmd.Dir = persistentDir
 	if err := runWithOutput(cmd, logger); err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2etestrunner
+package util
 
 import (
 	"context"
@@ -52,6 +52,18 @@ type GceCmd struct {
 	CmdWithImage
 }
 
+type GceCollectorCmd struct {
+	CmdWithImage
+}
+
+type GkeCollectorCmd struct {
+	CmdWithImage
+}
+
+type GkeOperatorCollectorCmd struct {
+	CmdWithImage
+}
+
 type GkeCmd struct {
 	CmdWithImage
 }
@@ -72,6 +84,10 @@ type CloudRunCmd struct {
 	CmdWithImage
 }
 
+type CloudRunCollectorCmd struct {
+	CmdWithImage
+}
+
 type CloudFunctionsGen2Cmd struct {
 	// Needed to configure which language will the function instance support
 	Runtime string `arg:"required" help:"Configure the language runtime environment for CloudFunction"`
@@ -87,13 +103,17 @@ type Args struct {
 	// tf/persistent/README.md for details on what is in there.
 	ApplyPersistent *ApplyPersistent `arg:"subcommand:apply-persistent" help:"Terraform apply the resources in tf/persistent and exit (does not run tests)."`
 
-	Local              *LocalCmd              `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
-	Gke                *GkeCmd                `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
-	Gce                *GceCmd                `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
-	Gae                *GaeCmd                `arg:"subcommand:gae" help:"Deploy the test server on GAE and execute tests"`
-	GaeStandard        *GaeStandardCmd        `arg:"subcommand:gae-standard" help:"Deploy the test server on GAE standard and execute tests"`
-	CloudRun           *CloudRunCmd           `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
-	CloudFunctionsGen2 *CloudFunctionsGen2Cmd `arg:"subcommand:cloud-functions-gen2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
+	Local                *LocalCmd                `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
+	Gke                  *GkeCmd                  `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
+	Gce                  *GceCmd                  `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	GceCollector         *GceCollectorCmd         `arg:"subcommand:gce-collector" help:"Deploy the collector on GCE and execute tests"`
+	GkeCollector         *GkeCollectorCmd         `arg:"subcommand:gke-collector" help:"Deploy the collector on GKE and execute tests"`
+	GkeOperatorCollector *GkeOperatorCollectorCmd `arg:"subcommand:gke-operator-collector" help:"Deploy the collector on GKE using the OpenTelemetry Operator and execute tests"`
+	Gae                  *GaeCmd                  `arg:"subcommand:gae" help:"Deploy the test server on GAE and execute tests"`
+	GaeStandard          *GaeStandardCmd          `arg:"subcommand:gae-standard" help:"Deploy the test server on GAE standard and execute tests"`
+	CloudRun             *CloudRunCmd             `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
+	CloudRunCollector    *CloudRunCollectorCmd    `arg:"subcommand:cloud-run-collector" help:"Deploy the collector on Cloud Run and execute tests"`
+	CloudFunctionsGen2   *CloudFunctionsGen2Cmd   `arg:"subcommand:cloud-functions-gen2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
 
 	CmdWithProjectId
 	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
@@ -112,5 +132,11 @@ type SetupFunc func(
 	*Args,
 	*log.Logger,
 ) (*testclient.Client, Cleanup, error)
+
+type SetupCollectorFunc func(
+	context.Context,
+	*Args,
+	*log.Logger,
+) (Cleanup, error)
 
 func NoopCleanup() {}

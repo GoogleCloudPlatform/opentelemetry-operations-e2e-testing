@@ -16,9 +16,10 @@ package e2etestrunner
 
 import (
 	"context"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
 )
 
@@ -26,9 +27,9 @@ const gaeStandardTfDir string = "tf/gae-standard"
 
 func SetupGaeStandard(
 	ctx context.Context,
-	args *Args,
+	args *util.Args,
 	logger *log.Logger,
-) (*testclient.Client, Cleanup, error) {
+) (*testclient.Client, util.Cleanup, error) {
 	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
