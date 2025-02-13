@@ -100,7 +100,7 @@ output "config" {
                 interval = 10000
                 exporter = {
                   otlp = {
-                    protocol = "grpc/protobuf"
+                    protocol = "grpc"
                     endpoint = "http://localhost:14317"
                   }
                 }
@@ -114,7 +114,7 @@ output "config" {
               batch = {
                 exporter = {
                   otlp = {
-                    protocol = "grpc/protobuf"
+                    protocol = "grpc"
                     endpoint = "http://localhost:14317"
                   }
                 }
