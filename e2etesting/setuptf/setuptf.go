@@ -95,6 +95,8 @@ func SetupTf(
 		return nil, func() {}, err
 	}
 
+	logger.Printf("Running %s with image: %s\n", tfDir, tfVars["image"])
+
 	cleanup := func() {
 		defer deleteWorkspace(ctx, testRunID, tfDir, logger)
 

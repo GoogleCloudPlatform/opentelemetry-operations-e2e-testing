@@ -93,7 +93,6 @@ output "config" {
           ]
         }
         metrics = {
-          address = "0.0.0.0:8888"
           readers = [
             {
               periodic = {
@@ -102,6 +101,16 @@ output "config" {
                   otlp = {
                     protocol = "grpc"
                     endpoint = "http://localhost:14317"
+                  }
+                }
+              }
+            },
+            {
+              pull = {
+                exporter = {
+                  prometheus = {
+                    host = "0.0.0.0"
+                    port = 8888
                   }
                 }
               }

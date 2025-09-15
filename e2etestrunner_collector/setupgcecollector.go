@@ -16,34 +16,32 @@ package e2etestrunner_collector
 
 import (
 	"context"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
 	"log"
+
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 )
 
-const cloudRunCollectorTfDir string = "tf/cloud-run-collector"
+const gceCollectorTfDir string = "tf/gce-collector"
 
-// SetupCloudRunCollector sets up the collector to run in Cloud Run.
-// Creates a new service and runs the specified container image as a revision.
-// The returned cleanup function tears down everything.
-func SetupCloudRunCollector(
+// SetupGceCollector Set up the collector to run in GCE container. Creates a new
+// GCE VM resources, and runs the specified container image. The
+// returned cleanup function tears down the VM.
+func SetupGceCollector(
 	ctx context.Context,
-	args *util.Args,
+	args *e2etesting.Args,
 	logger *log.Logger,
-) (util.Cleanup, error) {
+) (e2etesting.Cleanup, error) {
 	_, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		cloudRunCollectorTfDir,
+		gceCollectorTfDir,
 		map[string]string{
-			"image": args.CloudRunCollector.Image,
+			"image": args.GceCollector.Image,
 		},
 		logger,
 	)
-	if err != nil {
-		return cleanupTf, err
-	}
 
 	return cleanupTf, err
 }

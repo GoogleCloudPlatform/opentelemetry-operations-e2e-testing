@@ -2,9 +2,10 @@ package e2etestrunner_collector
 
 import (
 	"context"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
 	"log"
+
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 )
 
 const gkeOperatorCollectorTfDir string = "tf/gke-operator-collector"
@@ -14,9 +15,9 @@ const gkeOperatorCollectorTfDir string = "tf/gke-operator-collector"
 // The returned cleanup function tears down the whole cluster.
 func SetupGkeOperatorCollector(
 	ctx context.Context,
-	args *util.Args,
+	args *e2etesting.Args,
 	logger *log.Logger,
-) (util.Cleanup, error) {
+) (e2etesting.Cleanup, error) {
 	_, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
@@ -27,9 +28,6 @@ func SetupGkeOperatorCollector(
 		},
 		logger,
 	)
-	if err != nil {
-		return cleanupTf, err
-	}
 
 	return cleanupTf, err
 }

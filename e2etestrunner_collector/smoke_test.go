@@ -3,25 +3,25 @@
 package e2etestrunner_collector
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
 	"cloud.google.com/go/logging"
 	"cloud.google.com/go/logging/logadmin"
 	monitoring "cloud.google.com/go/monitoring/apiv3/v2"
 	monitoringpb "cloud.google.com/go/monitoring/apiv3/v2/monitoringpb"
-	"context"
-	"errors"
-	"fmt"
 	"google.golang.org/api/cloudtrace/v1"
 	"google.golang.org/api/iterator"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"strings"
-	"testing"
-	"time"
 )
 
 const (
 	representativeMetric = "workload.googleapis.com/otelcol_exporter_sent_metric_points"
 	queryMaxAttempts     = 3
-	labelName            = "otelcol_google_e2e"
 )
 
 func TestMetrics(t *testing.T) {
@@ -42,7 +42,7 @@ func TestMetrics(t *testing.T) {
 		filters := []string{
 			fmt.Sprintf("metric.type = %q", representativeMetric),
 			fmt.Sprintf("resource.type = %q", resourceType),
-			fmt.Sprintf("metric.labels.otelcol_google_e2e = %s", args.TestRunID),
+			fmt.Sprintf("metric.labels.%s = %s", labelName, args.TestRunID),
 		}
 
 		req := &monitoringpb.ListTimeSeriesRequest{
@@ -55,9 +55,9 @@ func TestMetrics(t *testing.T) {
 			View: monitoringpb.ListTimeSeriesRequest_FULL,
 		}
 
-		it := c.ListTimeSeries(ctx, req)
+		tsIter := c.ListTimeSeries(ctx, req)
 		for {
-			series, err := it.Next()
+			series, err := tsIter.Next()
 			if errors.Is(err, iterator.Done) {
 				break
 			}
@@ -107,10 +107,10 @@ func TestLogging(t *testing.T) {
 		time.Sleep(10 * time.Second)
 	}
 
-	fmt.Println(fmt.Sprintf("Entry found: %v", entry))
 	if err != nil {
-		t.Errorf(fmt.Sprintf("Could not any logs matching filter: %s", filter))
+		t.Fatalf(fmt.Sprintf("Could not find any logs matching filter %s: %v", filter, err))
 	}
+	fmt.Println(fmt.Sprintf("Entry found: %v", entry))
 }
 
 func TestTraces(t *testing.T) {
@@ -121,14 +121,14 @@ func TestTraces(t *testing.T) {
 	}
 
 	req := cloudService.Projects.Traces.List(args.ProjectID)
-	req.Filter(fmt.Sprintf("otelcol_google_e2e:%s", args.TestRunID))
+	req.Filter(resourceFilter)
 	resp, err := req.Do()
 	if err != nil {
 		t.Fatal(err)
 	}
 	tracesFound := len(resp.Traces)
 	if tracesFound == 0 {
-		t.Errorf(fmt.Sprintf("Could not find traces with resource attribute otelcol_google_e2e:%s", args.TestRunID))
+		t.Errorf(fmt.Sprintf("Could not find traces with resource attribute: %s", resourceFilter))
 	}
-	fmt.Println(fmt.Sprintf("Found traces with otelcol_google_e2e:%s", args.TestRunID))
+	fmt.Println(fmt.Sprintf("Found traces with resource attribute%s", resourceFilter))
 }

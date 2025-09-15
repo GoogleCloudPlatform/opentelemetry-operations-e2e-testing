@@ -16,8 +16,8 @@ package e2etestrunner
 
 import (
 	"context"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
@@ -30,9 +30,9 @@ const gkeTfDir string = "tf/gke"
 // function tears down the whole cluster.
 func SetupGke(
 	ctx context.Context,
-	args *util.Args,
+	args *e2etesting.Args,
 	logger *log.Logger,
-) (*testclient.Client, util.Cleanup, error) {
+) (*testclient.Client, e2etesting.Cleanup, error) {
 	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,

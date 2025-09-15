@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -95,7 +96,7 @@ func TestVerifyPromMetric(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			mockT := &MockT{}
-			var parser expfmt.TextParser
+			parser := expfmt.NewTextParser(model.UTF8Validation)
 			actual, err := parser.TextToMetricFamilies(strings.NewReader(tc.textFormat))
 			require.NoError(t, err)
 			verifyPromMetric(mockT, actual, tc.testCase)
@@ -110,7 +111,7 @@ func TestVerifyPromMetric(t *testing.T) {
 }
 
 func TestVerifyPromRealTestCasesSuccess(t *testing.T) {
-	var parser expfmt.TextParser
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	// Taken from a real run of the quickstart
 	actual, err := parser.TextToMetricFamilies(strings.NewReader(`
 	# HELP otelcol_exporter_sent_log_records Number of log record successfully sent to destination.
@@ -121,7 +122,7 @@ func TestVerifyPromRealTestCasesSuccess(t *testing.T) {
 	otelcol_exporter_sent_metric_points{exporter="googlemanagedprometheus",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 333
 	# HELP otelcol_exporter_sent_spans Number of spans successfully sent to destination.
 	# TYPE otelcol_exporter_sent_spans counter
-	otelcol_exporter_sent_spans{exporter="googlecloud",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 499
+	otelcol_exporter_sent_spans{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 499
 	`))
 	require.NoError(t, err)
 
@@ -131,7 +132,7 @@ func TestVerifyPromRealTestCasesSuccess(t *testing.T) {
 }
 
 func TestVerifyPromRealTestCasesFails(t *testing.T) {
-	var parser expfmt.TextParser
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	// Taken from a real run of the quickstart
 	actual, err := parser.TextToMetricFamilies(strings.NewReader(`
 	# HELP otelcol_exporter_sent_log_records Number of log record successfully sent to destination.
@@ -142,7 +143,7 @@ func TestVerifyPromRealTestCasesFails(t *testing.T) {
 	otelcol_exporter_sent_metric_points{exporter="googlemanagedprometheus",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 0
 	# HELP otelcol_exporter_sent_spans Number of spans successfully sent to destination.
 	# TYPE otelcol_exporter_sent_spans counter
-	otelcol_exporter_sent_spans{exporter="googlecloud",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 0
+	otelcol_exporter_sent_spans{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 0
 	`))
 	require.NoError(t, err)
 

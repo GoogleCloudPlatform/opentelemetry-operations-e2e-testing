@@ -25,7 +25,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
 	"html/template"
 	"log"
 	"os"
@@ -88,7 +88,7 @@ This will fetch recent Cloud Build logs to automatically update the statuses in 
 )
 
 type Args struct {
-	util.CmdWithProjectId
+	e2etesting.CmdWithProjectId
 }
 
 type status string
@@ -106,7 +106,7 @@ var (
 )
 
 func main() {
-	args := util.Args{}
+	args := e2etesting.Args{}
 	arg.MustParse(&args)
 
 	ctx := context.Background()

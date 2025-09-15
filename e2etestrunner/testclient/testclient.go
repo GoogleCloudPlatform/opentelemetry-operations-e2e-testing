@@ -17,7 +17,7 @@ package testclient
 import (
 	"context"
 	"fmt"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
 	"strconv"
 

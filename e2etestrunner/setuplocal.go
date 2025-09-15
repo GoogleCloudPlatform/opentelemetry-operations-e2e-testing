@@ -17,8 +17,8 @@ package e2etestrunner
 import (
 	"context"
 	"fmt"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/util/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
 	"os"
 
@@ -37,9 +37,9 @@ const localTfDir = "tf/local"
 // container on the local host
 func SetupLocal(
 	ctx context.Context,
-	args *util.Args,
+	args *e2etesting.Args,
 	logger *log.Logger,
-) (*testclient.Client, util.Cleanup, error) {
+) (*testclient.Client, e2etesting.Cleanup, error) {
 	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
@@ -112,7 +112,7 @@ func SetupLocal(
 func createContainer(
 	ctx context.Context,
 	cli *client.Client,
-	args *util.Args,
+	args *e2etesting.Args,
 	pubsubInfo *setuptf.PubsubInfo,
 	logger *log.Logger,
 ) (container.CreateResponse, error) {
