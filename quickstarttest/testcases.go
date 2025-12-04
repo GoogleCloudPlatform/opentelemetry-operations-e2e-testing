@@ -43,7 +43,7 @@ type testCase struct {
 }
 
 var testCases = []testCase{
-	{metricName: "otelcol_exporter_sent_spans", exporter: "googlecloud", threshold: sentItemsThreshold},
+	{metricName: "otelcol_exporter_sent_spans", exporter: "otlphttp", threshold: sentItemsThreshold},
 	{metricName: "otelcol_exporter_sent_log_records", exporter: "googlecloud", threshold: sentItemsThreshold},
 	{metricName: "otelcol_exporter_sent_metric_points", exporter: "googlemanagedprometheus", threshold: sentItemsThreshold},
 }

@@ -121,7 +121,7 @@ func TestVerifyPromRealTestCasesSuccess(t *testing.T) {
 	otelcol_exporter_sent_metric_points{exporter="googlemanagedprometheus",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 333
 	# HELP otelcol_exporter_sent_spans Number of spans successfully sent to destination.
 	# TYPE otelcol_exporter_sent_spans counter
-	otelcol_exporter_sent_spans{exporter="googlecloud",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 499
+	otelcol_exporter_sent_spans{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 499
 	`))
 	require.NoError(t, err)
 
@@ -142,7 +142,7 @@ func TestVerifyPromRealTestCasesFails(t *testing.T) {
 	otelcol_exporter_sent_metric_points{exporter="googlemanagedprometheus",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 0
 	# HELP otelcol_exporter_sent_spans Number of spans successfully sent to destination.
 	# TYPE otelcol_exporter_sent_spans counter
-	otelcol_exporter_sent_spans{exporter="googlecloud",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 0
+	otelcol_exporter_sent_spans{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 0
 	`))
 	require.NoError(t, err)
 
