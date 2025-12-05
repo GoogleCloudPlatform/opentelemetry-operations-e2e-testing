@@ -26,6 +26,7 @@ import (
 
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go/modules/compose"
@@ -117,7 +118,7 @@ func getPromMetrics(ctx context.Context, composeStack compose.ComposeStack) (map
 	}
 	defer resp.Body.Close()
 
-	var parser expfmt.TextParser
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	parsed, err := parser.TextToMetricFamilies(resp.Body)
 	if err != nil {
 		return nil, err
@@ -142,7 +143,7 @@ func getPromEndpoint(ctx context.Context, composeStack compose.ComposeStack) (st
 }
 
 func verifyPromMetric(t assert.TestingT, promMetrics map[string]*dto.MetricFamily, tc testCase) {
-	if !assert.Contains(t, promMetrics, tc.metricName, "prometheus metrics do not contain %v:\n%v", tc.metricName, promMetrics) {
+	if !assert.Containsf(t, promMetrics, tc.metricName, "prometheus metrics do not contain %v:\n%v", tc.metricName, promMetrics) {
 		return
 	}
 	mf := promMetrics[tc.metricName]
@@ -151,10 +152,10 @@ func verifyPromMetric(t assert.TestingT, promMetrics map[string]*dto.MetricFamil
 		for _, labelPair := range metric.GetLabel() {
 			if labelPair.GetName() == "exporter" && labelPair.GetValue() == tc.exporter {
 				value := metric.GetCounter().GetValue()
-				assert.Greater(t, value, tc.threshold, "Metric %v was expected to have value > %v, got %v", metric, sentItemsThreshold, value)
+				assert.Greaterf(t, value, tc.threshold, "Metric %v was expected to have value > %v, got %v", metric, sentItemsThreshold, value)
 				return
 			}
 		}
 	}
-	assert.Fail(t, "Could not find a metric sample for exporter=%v, got metrics %v", tc.exporter, mf)
+	assert.Failf(t, "Could not find a metric sample for exporter=%v, got metrics %v", tc.exporter, mf)
 }

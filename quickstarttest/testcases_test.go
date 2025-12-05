@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -95,7 +96,7 @@ func TestVerifyPromMetric(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			mockT := &MockT{}
-			var parser expfmt.TextParser
+			parser := expfmt.NewTextParser(model.UTF8Validation)
 			actual, err := parser.TextToMetricFamilies(strings.NewReader(tc.textFormat))
 			require.NoError(t, err)
 			verifyPromMetric(mockT, actual, tc.testCase)
@@ -110,7 +111,7 @@ func TestVerifyPromMetric(t *testing.T) {
 }
 
 func TestVerifyPromRealTestCasesSuccess(t *testing.T) {
-	var parser expfmt.TextParser
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	// Taken from a real run of the quickstart
 	actual, err := parser.TextToMetricFamilies(strings.NewReader(`
 	# HELP otelcol_exporter_sent_log_records Number of log record successfully sent to destination.
@@ -131,7 +132,7 @@ func TestVerifyPromRealTestCasesSuccess(t *testing.T) {
 }
 
 func TestVerifyPromRealTestCasesFails(t *testing.T) {
-	var parser expfmt.TextParser
+	parser := expfmt.NewTextParser(model.UTF8Validation)
 	// Taken from a real run of the quickstart
 	actual, err := parser.TextToMetricFamilies(strings.NewReader(`
 	# HELP otelcol_exporter_sent_log_records Number of log record successfully sent to destination.
