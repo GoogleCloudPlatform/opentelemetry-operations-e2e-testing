@@ -16,3 +16,6 @@
 
 # any local terraform binary
 terraform*
+
+go.work
+go.work.sum
