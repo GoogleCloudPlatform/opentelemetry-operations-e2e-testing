@@ -17,6 +17,7 @@ package quickstarttest
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,6 +30,7 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go/log"
 	"github.com/testcontainers/testcontainers-go/modules/compose"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -57,6 +59,8 @@ var testCases = []testCase{
 // to additional compose files to include.
 func InstrumentationQuickstartTest(t *testing.T, quickstartRoot string) {
 	ctx := context.Background()
+	log.SetDefault(log.TestLogger(t))
+
 	composeStack := composeUp(ctx, t, quickstartRoot)
 
 	// Let the docker compose app run until some spans/logs/metrics are sent to GCP
@@ -100,6 +104,25 @@ func composeUp(ctx context.Context, t *testing.T, quickstartRoot string) compose
 		WaitForService("otelcol", wait.ForHTTP("/metrics").WithPort("8888"))
 
 	t.Cleanup(func() {
+		ctx := context.Background()
+		for _, service := range composeStack.Services() {
+			container, err := composeStack.ServiceContainer(ctx, service)
+			if err != nil {
+				t.Logf("failed to get container for service %q: %v", service, err)
+				continue
+			}
+			logs, err := container.Logs(ctx)
+			if err != nil {
+				t.Logf("failed to get logs for service %q: %v", service, err)
+				continue
+			}
+			buf, err := io.ReadAll(logs)
+			if err != nil {
+				t.Logf("failed to read logs for service %q: %v", service, err)
+				continue
+			}
+			t.Logf("[%s]\n%s", service, string(buf))
+		}
 		require.NoError(t, composeStack.Down(ctx, compose.RemoveOrphans(true)))
 	})
 	require.NoError(t, composeStack.Up(ctx))
