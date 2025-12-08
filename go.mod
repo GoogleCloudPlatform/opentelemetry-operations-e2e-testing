@@ -20,7 +20,7 @@ require (
 	cloud.google.com/go/pubsub v1.42.0
 	cloud.google.com/go/storage v1.43.0
 	github.com/alexflint/go-arg v1.5.1
-	github.com/docker/docker v27.2.0+incompatible
+	github.com/docker/docker v28.0.0+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/sethvargo/go-retry v0.1.0
 	github.com/stretchr/testify v1.9.0
