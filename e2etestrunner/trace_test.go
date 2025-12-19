@@ -20,6 +20,7 @@ package e2etestrunner
 import (
 	"context"
 	"fmt"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
 	"math/rand"
 	"regexp"
 	"strings"
@@ -401,7 +402,7 @@ func TestBasicPropagator(t *testing.T) {
 	testID := fmt.Sprint(rand.Uint64())
 
 	// Generate random trace and span IDs
-	traceIdHex, err := randomHex(16)
+	traceIdHex, err := e2etesting.RandomHex(16)
 	require.NoErrorf(t, err, "test server failed for scenario %v: %v", scenario, err)
 	parentSpanIdDec := rand.Uint64()
 	xCloudTraceContext := fmt.Sprintf("%v/%v;o=1", traceIdHex, parentSpanIdDec)

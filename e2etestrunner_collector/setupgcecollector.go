@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,39 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2etestrunner
+package e2etestrunner_collector
 
 import (
 	"context"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 )
 
-const gaeTfDir string = "tf/gae"
+const gceCollectorTfDir string = "tf/gce-collector"
 
-func SetupGae(
+// SetupGceCollector Set up the collector to run in GCE container. Creates a new
+// GCE VM resources, and runs the specified container image. The
+// returned cleanup function tears down the VM.
+func SetupGceCollector(
 	ctx context.Context,
 	args *e2etesting.Args,
 	logger *log.Logger,
-) (*testclient.Client, e2etesting.Cleanup, error) {
-	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
+) (e2etesting.Cleanup, error) {
+	_, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		gaeTfDir,
+		gceCollectorTfDir,
 		map[string]string{
-			"image":   args.Gae.Image,
-			"runtime": args.Gae.Runtime,
+			"image": args.GceCollector.Image,
 		},
 		logger,
 	)
-	if err != nil {
-		return nil, cleanupTf, err
-	}
 
-	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)
-	return client, cleanupTf, err
+	return cleanupTf, err
 }

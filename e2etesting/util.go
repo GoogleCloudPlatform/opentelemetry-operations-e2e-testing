@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2etestrunner
+package e2etesting
 
 import (
+	"crypto/rand"
 	"encoding/hex"
-	"math/rand"
 )
 
 // Generates a random hex string of given length
-func randomHex(length uint8) (string, error) {
+func RandomHex(length uint8) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err

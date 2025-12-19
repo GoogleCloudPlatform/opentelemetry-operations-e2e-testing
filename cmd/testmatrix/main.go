@@ -25,6 +25,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
 	"html/template"
 	"log"
 	"os"
@@ -33,7 +34,6 @@ import (
 	"strings"
 
 	"cloud.google.com/go/storage"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner"
 	"github.com/alexflint/go-arg"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/cloudbuild/v1"
@@ -88,7 +88,7 @@ This will fetch recent Cloud Build logs to automatically update the statuses in 
 )
 
 type Args struct {
-	e2etestrunner.CmdWithProjectId
+	e2etesting.CmdWithProjectId
 }
 
 type status string
@@ -106,7 +106,7 @@ var (
 )
 
 func main() {
-	args := e2etestrunner.Args{}
+	args := e2etesting.Args{}
 	arg.MustParse(&args)
 
 	ctx := context.Background()

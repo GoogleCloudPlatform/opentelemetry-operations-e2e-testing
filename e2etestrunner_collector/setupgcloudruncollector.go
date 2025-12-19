@@ -12,41 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2etestrunner
+package e2etestrunner_collector
 
 import (
 	"context"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 )
 
-const cloudRunTfDir string = "tf/cloud-run"
+const cloudRunCollectorTfDir string = "tf/cloud-run-collector"
 
-// SetupCloudRun sets up the instrumented test server to run in Cloud Run.
+// SetupCloudRunCollector sets up the collector to run in Cloud Run.
 // Creates a new service and runs the specified container image as a revision.
 // The returned cleanup function tears down everything.
-func SetupCloudRun(
+func SetupCloudRunCollector(
 	ctx context.Context,
 	args *e2etesting.Args,
 	logger *log.Logger,
-) (*testclient.Client, e2etesting.Cleanup, error) {
-	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
+) (e2etesting.Cleanup, error) {
+	_, cleanupTf, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
-		cloudRunTfDir,
+		cloudRunCollectorTfDir,
 		map[string]string{
-			"image": args.CloudRun.Image,
+			"image": args.CloudRunCollector.Image,
 		},
 		logger,
 	)
-	if err != nil {
-		return nil, cleanupTf, err
-	}
 
-	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)
-	return client, cleanupTf, err
+	return cleanupTf, err
 }

@@ -19,57 +19,23 @@ package e2etestrunner
 
 import (
 	"context"
-	"flag"
-	"log"
-	"math/rand"
-	"os"
-	"strings"
 	"testing"
-	"time"
 
-	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/setuptf"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
+	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
+
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
-	"github.com/alexflint/go-arg"
 )
 
 var (
-	args             Args
+	args             e2etesting.Args
 	testServerClient *testclient.Client
 )
 
 func TestMain(m *testing.M) {
-	rand.Seed(time.Now().UnixNano())
-	p := arg.MustParse(&args)
-	if p.Subcommand() == nil {
-		p.Fail("missing command")
-	}
-	// Need a logger just for TestMain() before testing.T is available
-	logger := log.New(os.Stdout, "TestMain: ", log.LstdFlags|log.Lshortfile)
-	ctx := context.Background()
+	logger, ctx := e2etesting.InitTestMain(&args, setuptf.ApplyPersistent)
 
-	// Handle special case of just creating persistent resources
-	if args.ApplyPersistent != nil {
-		err := setuptf.ApplyPersistent(ctx, args.ProjectID, args.ApplyPersistent.AutoApprove, logger)
-		if err != nil {
-			logger.Panic(err)
-		}
-		return
-	}
-
-	// hacky but works
-	os.Args = append([]string{os.Args[0]}, strings.Fields(args.GoTestFlags)...)
-	flag.Parse()
-
-	// handle any complex defaults
-	if args.TestRunID == "" {
-		hex, err := randomHex(6)
-		if err != nil {
-			logger.Fatalf("error generating random hex string: %v\n", err)
-		}
-		args.TestRunID = hex
-	}
-
-	var setupFunc SetupFunc
+	var setupFunc e2etesting.SetupFunc
 	switch {
 	case args.Local != nil:
 		setupFunc = SetupLocal
@@ -106,7 +72,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// Run tests
-	logger.Print(BeginOutputArt)
+	logger.Print(e2etesting.BeginOutputArt)
 	m.Run()
-	logger.Print(EndOutputArt)
+	logger.Print(e2etesting.EndOutputArt)
 }

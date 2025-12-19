@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2etestrunner
+package e2etesting
 
 import (
 	"context"
+	"flag"
 	"log"
+	"math/rand"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etestrunner/testclient"
+	"github.com/alexflint/go-arg"
 )
 
 type ApplyPersistent struct {
@@ -52,6 +57,22 @@ type GceCmd struct {
 	CmdWithImage
 }
 
+type GceCollectorCmd struct {
+	CmdWithImage
+}
+
+type GceCollectorArmCmd struct {
+	CmdWithImage
+}
+
+type GkeCollectorCmd struct {
+	CmdWithImage
+}
+
+type GkeOperatorCollectorCmd struct {
+	CmdWithImage
+}
+
 type GkeCmd struct {
 	CmdWithImage
 }
@@ -72,6 +93,10 @@ type CloudRunCmd struct {
 	CmdWithImage
 }
 
+type CloudRunCollectorCmd struct {
+	CmdWithImage
+}
+
 type CloudFunctionsGen2Cmd struct {
 	// Needed to configure which language will the function instance support
 	Runtime string `arg:"required" help:"Configure the language runtime environment for CloudFunction"`
@@ -87,17 +112,22 @@ type Args struct {
 	// tf/persistent/README.md for details on what is in there.
 	ApplyPersistent *ApplyPersistent `arg:"subcommand:apply-persistent" help:"Terraform apply the resources in tf/persistent and exit (does not run tests)."`
 
-	Local              *LocalCmd              `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
-	Gke                *GkeCmd                `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
-	Gce                *GceCmd                `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
-	Gae                *GaeCmd                `arg:"subcommand:gae" help:"Deploy the test server on GAE and execute tests"`
-	GaeStandard        *GaeStandardCmd        `arg:"subcommand:gae-standard" help:"Deploy the test server on GAE standard and execute tests"`
-	CloudRun           *CloudRunCmd           `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
-	CloudFunctionsGen2 *CloudFunctionsGen2Cmd `arg:"subcommand:cloud-functions-gen2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
+	Local                *LocalCmd                `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
+	Gke                  *GkeCmd                  `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
+	Gce                  *GceCmd                  `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	GceCollector         *GceCollectorCmd         `arg:"subcommand:gce-collector" help:"Deploy the collector on GCE and execute tests"`
+	GceCollectorArm      *GceCollectorArmCmd      `arg:"subcommand:gce-collector-arm" help:"Deploy the collector on GCE and execute tests"`
+	GkeCollector         *GkeCollectorCmd         `arg:"subcommand:gke-collector" help:"Deploy the collector on GKE and execute tests"`
+	GkeOperatorCollector *GkeOperatorCollectorCmd `arg:"subcommand:gke-operator-collector" help:"Deploy the collector on GKE using the OpenTelemetry Operator and execute tests"`
+	Gae                  *GaeCmd                  `arg:"subcommand:gae" help:"Deploy the test server on GAE and execute tests"`
+	GaeStandard          *GaeStandardCmd          `arg:"subcommand:gae-standard" help:"Deploy the test server on GAE standard and execute tests"`
+	CloudRun             *CloudRunCmd             `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
+	CloudRunCollector    *CloudRunCollectorCmd    `arg:"subcommand:cloud-run-collector" help:"Deploy the collector on Cloud Run and execute tests"`
+	CloudFunctionsGen2   *CloudFunctionsGen2Cmd   `arg:"subcommand:cloud-functions-gen2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
 
 	CmdWithProjectId
 	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
-	HealthCheckTimeout time.Duration `arg:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"2m"`
+	HealthCheckTimeout time.Duration `arg:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"15m"`
 
 	// This is used in a new terraform workspace's name and in the GCP resources
 	// we create. Pass the GCB build ID in CI to get the build id formatted into
@@ -113,4 +143,46 @@ type SetupFunc func(
 	*log.Logger,
 ) (*testclient.Client, Cleanup, error)
 
+type SetupCollectorFunc func(
+	context.Context,
+	*Args,
+	*log.Logger,
+) (Cleanup, error)
+
 func NoopCleanup() {}
+
+type ApplyPersistentFunc func(ctx context.Context, projectID string, autoApprove bool, logger *log.Logger) error
+
+func InitTestMain(args *Args, applyPersistent ApplyPersistentFunc) (*log.Logger, context.Context) {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	p := arg.MustParse(args)
+	if p.Subcommand() == nil {
+		p.Fail("missing command")
+	}
+	// Need a logger just for TestMain() before testing.T is available
+	logger := log.New(os.Stdout, "TestMain: ", log.LstdFlags|log.Lshortfile)
+	ctx := context.Background()
+
+	// Handle special case of just creating persistent resources
+	if args.ApplyPersistent != nil {
+		err := applyPersistent(ctx, args.ProjectID, args.ApplyPersistent.AutoApprove, logger)
+		if err != nil {
+			logger.Panic(err)
+		}
+		return nil, nil
+	}
+
+	// hacky but works
+	os.Args = append([]string{os.Args[0]}, strings.Fields(args.GoTestFlags)...)
+	flag.Parse()
+
+	// handle any complex defaults
+	if args.TestRunID == "" {
+		hex, err := RandomHex(6)
+		if err != nil {
+			logger.Fatalf("error generating random hex string: %v\n", err)
+		}
+		args.TestRunID = hex
+	}
+	return logger, ctx
+}
