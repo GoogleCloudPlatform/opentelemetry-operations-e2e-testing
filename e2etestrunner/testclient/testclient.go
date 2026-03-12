@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
 	"strconv"
+	"sync"
 
 	"cloud.google.com/go/pubsub"
 	"google.golang.org/genproto/googleapis/rpc/code"
@@ -48,6 +49,14 @@ type Client struct {
 	pubsubClient         *pubsub.Client
 	requestTopic         *pubsub.Topic
 	responseSubscription *pubsub.Subscription
+
+	mu              sync.Mutex
+	pendingRequests map[string]chan asyncResponse
+}
+
+type asyncResponse struct {
+	res *Response
+	err error
 }
 
 func New(ctx context.Context, projectID string, pubsubInfo *setuptf.PubsubInfo) (*Client, error) {
@@ -59,10 +68,42 @@ func New(ctx context.Context, projectID string, pubsubInfo *setuptf.PubsubInfo) 
 		pubsubClient:         pubsub,
 		requestTopic:         pubsub.Topic(pubsubInfo.RequestTopic.TopicName),
 		responseSubscription: pubsub.Subscription(pubsubInfo.ResponseTopic.SubscriptionName),
+		pendingRequests:      make(map[string]chan asyncResponse),
 	}
 	// Disable buffering
 	client.requestTopic.PublishSettings.CountThreshold = 1
+
+	go client.startReceiver(ctx)
+
 	return client, nil
+}
+
+func (c *Client) startReceiver(ctx context.Context) {
+	err := c.responseSubscription.Receive(ctx, func(ctx context.Context, message *pubsub.Message) {
+		testID := message.Attributes[TestID]
+
+		c.mu.Lock()
+		ch, ok := c.pendingRequests[testID]
+		c.mu.Unlock()
+
+		if ok {
+			message.Ack()
+			var resErr error
+			var res *Response
+			codeInt, err := strconv.Atoi(message.Attributes[StatusCode])
+			if err != nil {
+				resErr = fmt.Errorf(`response pub/sub message invalid attribute %q: %v, message: %v`, StatusCode, err, message)
+			} else {
+				res = &Response{StatusCode: code.Code(codeInt), Headers: message.Attributes}
+			}
+			ch <- asyncResponse{res: res, err: resErr}
+		} else {
+			message.Nack()
+		}
+	})
+	if err != nil {
+		log.Printf("Background subscriber error: %v", err)
+	}
 }
 
 func (c *Client) Request(
@@ -73,6 +114,18 @@ func (c *Client) Request(
 	for k, v := range request.Headers {
 		attributes[k] = v
 	}
+
+	resCh := make(chan asyncResponse, 1)
+	c.mu.Lock()
+	c.pendingRequests[request.TestID] = resCh
+	c.mu.Unlock()
+
+	defer func() {
+		c.mu.Lock()
+		delete(c.pendingRequests, request.TestID)
+		c.mu.Unlock()
+	}()
+
 	pubResult := c.requestTopic.Publish(ctx, &pubsub.Message{
 		Attributes: attributes,
 	})
@@ -81,40 +134,17 @@ func (c *Client) Request(
 		return nil, err
 	}
 
-	var (
-		res    *Response
-		resErr error
-	)
-	cctx, cancel := context.WithCancel(ctx)
-	err = c.responseSubscription.Receive(cctx, func(ctx context.Context, message *pubsub.Message) {
-		if testID := message.Attributes[TestID]; testID == request.TestID {
-			message.Ack()
-			codeInt, err := strconv.Atoi(message.Attributes[StatusCode])
-			if err != nil {
-				resErr = fmt.Errorf(`response pub/sub message invalid attribute %q: %v, message: %v`, StatusCode, err, message)
-			} else {
-				res = &Response{StatusCode: code.Code(codeInt), Headers: message.Attributes}
-			}
-			cancel()
-		} else {
-			message.Nack()
-		}
-	})
-
-	if err != nil {
-		return nil, err
-	} else if resErr != nil {
-		return nil, resErr
-	} else if res == nil {
-		// Can happen if cctx times out
+	select {
+	case <-ctx.Done():
 		return nil, fmt.Errorf(
-			"sent message ID %v, but never received a response on subscription %v",
+			"sent message ID %v, but never received a response on subscription %v: %w",
 			messageID,
 			c.responseSubscription.String(),
+			ctx.Err(),
 		)
+	case asyncRes := <-resCh:
+		return asyncRes.res, asyncRes.err
 	}
-
-	return res, nil
 }
 
 // Call in TestMain() to block until the test server is ready for requests. Uses

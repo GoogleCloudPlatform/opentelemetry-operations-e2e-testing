@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/pubsub"
@@ -63,13 +64,18 @@ func TestClientRequest(t *testing.T) {
 	go func() {
 		err := reqSub.Receive(ctx, func(c context.Context, msg *pubsub.Message) {
 			msg.Ack()
-			
+
+			custom := "header"
+			if val, ok := msg.Attributes["foo"]; ok {
+				custom = val
+			}
+
 			// Send response
 			res := &pubsub.Message{
 				Attributes: map[string]string{
 					TestID:     msg.Attributes[TestID],
 					StatusCode: strconv.Itoa(int(code.Code_OK)),
-					"custom":   "header",
+					"custom":   custom,
 				},
 			}
 			respTopic.Publish(c, res)
@@ -82,18 +88,41 @@ func TestClientRequest(t *testing.T) {
 	sut, err := New(ctx, "project", pubsubInfo)
 	require.NoError(t, err)
 
-	req := Request{
-		TestID:   "test-123",
-		Scenario: "my-scenario",
-		Headers:  map[string]string{"foo": "bar"},
-	}
+	t.Run("single request", func(t *testing.T) {
+		req := Request{
+			TestID:   "test-123",
+			Scenario: "my-scenario",
+			Headers:  map[string]string{"foo": "bar"},
+		}
 
-	// We may need a small timeout for the test client receiving the response, but it blocks
-	resp, err := sut.Request(ctx, req)
+		resp, err := sut.Request(ctx, req)
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.Equal(t, code.Code_OK, resp.StatusCode)
+		assert.Equal(t, "bar", resp.Headers["custom"])
+		assert.Equal(t, "test-123", resp.Headers[TestID])
+	})
 
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	assert.Equal(t, code.Code_OK, resp.StatusCode)
-	assert.Equal(t, "header", resp.Headers["custom"])
-	assert.Equal(t, "test-123", resp.Headers[TestID])
+	t.Run("multiplexing", func(t *testing.T) {
+		var wg sync.WaitGroup
+		for i := 0; i < 10; i++ {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				req := Request{
+					TestID:   "test-" + strconv.Itoa(idx),
+					Scenario: "my-scenario-" + strconv.Itoa(idx),
+					Headers:  map[string]string{"foo": "bar-" + strconv.Itoa(idx)},
+				}
+
+				resp, err := sut.Request(ctx, req)
+				assert.NoError(t, err)
+				require.NotNil(t, resp)
+				assert.Equal(t, code.Code_OK, resp.StatusCode)
+				assert.Equal(t, "bar-"+strconv.Itoa(idx), resp.Headers["custom"])
+				assert.Equal(t, "test-"+strconv.Itoa(idx), resp.Headers[TestID])
+			}(i)
+		}
+		wg.Wait()
+	})
 }
