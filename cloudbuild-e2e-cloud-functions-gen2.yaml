@@ -17,7 +17,7 @@ steps:
   - name: docker:28
     id: wait-for-images
     entrypoint: "sh"
-    timeout: 3m
+    timeout: 15m
     env:
       - "_TEST_SERVER_IMAGE=${_TEST_SERVER_IMAGE}"
       - "_TEST_RUNNER_IMAGE=${_TEST_RUNNER_IMAGE}"
