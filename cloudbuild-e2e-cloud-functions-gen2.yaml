@@ -34,6 +34,28 @@ steps:
             sleep 5
         done
 
+  # Clone repo and zip code
+  - name: gcr.io/cloud-builders/git
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        git clone https://github.com/GoogleCloudPlatform/opentelemetry-operations-go.git
+        cd opentelemetry-operations-go
+        LATEST_TAG=$$(git describe --tags $$(git rev-list --tags --max-count=1))
+        git checkout $$LATEST_TAG
+  - name: golang:1.25.5
+    id: zip-code
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+         apt-get update && \
+         apt-get install zip --assume-yes && \
+         cd opentelemetry-operations-go/e2e-test-server/cloud_functions/ && \
+         go mod vendor && \
+         zip -r function-source *
+
   # Run the test
   - name: $_TEST_RUNNER_IMAGE
     id: run-tests-cloudfunctions
@@ -42,7 +64,9 @@ steps:
     env: ["PROJECT_ID=$PROJECT_ID"]
     args:
       - cloud-functions-gen2
-      - --image=$_TEST_SERVER_IMAGE
+      - --runtime=go125
+      - --functionsource=/workspace/opentelemetry-operations-go/e2e-test-server/cloud_functions/function-source.zip
+      - --entrypoint=HandleCloudFunction
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:
