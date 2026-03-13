@@ -20,13 +20,18 @@ resource "google_cloud_run_service" "default" {
     create = "6m"
   }
 
+  metadata {
+    annotations = {
+      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
+    }
+  }
+
   template {
     metadata {
       labels = local.common_labels
       annotations = {
         // limit to one container instance
         "autoscaling.knative.dev/maxScale" = "1"
-        "run.googleapis.com/ingress"       = "internal-and-cloud-load-balancing"
       }
     }
 
