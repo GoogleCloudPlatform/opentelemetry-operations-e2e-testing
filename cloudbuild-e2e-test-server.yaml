@@ -34,8 +34,19 @@ steps:
         cd opentelemetry-operations-go
         docker build --tag=${_TEST_SERVER_IMAGE} --file=e2e-test-server/Dockerfile .
         docker push ${_TEST_SERVER_IMAGE}
+  - name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - build
+      - --tag=${_TEST_RUNNER_IMAGE_NAME}:${SHORT_SHA}
+      - --build-arg=BUILDKIT_INLINE_CACHE=1
+      - --cache-from=${_TEST_RUNNER_IMAGE_NAME}:${SHORT_SHA}
+      - .
 
+images: ["${_TEST_RUNNER_IMAGE_NAME}:${SHORT_SHA}"]
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:
   _TEST_SERVER_IMAGE: ${_TEST_SERVER_IMAGE_NAME}:${SHORT_SHA}
   _TEST_SERVER_IMAGE_NAME: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-go-e2e-test-server
+  _TEST_RUNNER_IMAGE_NAME: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-e2e-testing
