@@ -14,7 +14,14 @@
 
 steps:
   - name: gcr.io/cloud-builders/git
-    args: ['clone', 'https://github.com/GoogleCloudPlatform/opentelemetry-operations-go.git']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        git clone https://github.com/GoogleCloudPlatform/opentelemetry-operations-go.git
+        cd opentelemetry-operations-go
+        LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+        git checkout $LATEST_TAG
   - name: docker:28
     entrypoint: "sh"
     args:
