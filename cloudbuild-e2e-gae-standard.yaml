@@ -1,0 +1,73 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+  # Wait for the images to exist
+  - name: docker:28
+    id: wait-for-images
+    entrypoint: "sh"
+    timeout: 15m
+    env:
+      - "_TEST_SERVER_IMAGE=${_TEST_SERVER_IMAGE}"
+      - "_TEST_RUNNER_IMAGE=${_TEST_RUNNER_IMAGE}"
+    args:
+      - -c
+      - |
+        while true; do
+            if docker manifest inspect ${_TEST_SERVER_IMAGE} > /dev/null && docker manifest inspect ${_TEST_RUNNER_IMAGE} > /dev/null; then
+                echo "Images are available, continuing onto test"
+                break
+            else
+                echo "Images not available yet, will continue to retry"
+            fi
+            sleep 5
+        done
+
+  # Clone repo and zip code
+  - name: gcr.io/cloud-builders/git
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        git clone https://github.com/GoogleCloudPlatform/opentelemetry-operations-go.git
+        cd opentelemetry-operations-go
+        LATEST_TAG=$$(git describe --tags $$(git rev-list --tags --max-count=1))
+        git checkout $$LATEST_TAG
+  - name: golang:1.24.2
+    id: zip-code
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+         apt-get update && \
+         apt-get install zip --assume-yes && \
+         cd opentelemetry-operations-go/e2e-test-server/ && \
+         go mod vendor && \
+         zip -r appsource *
+
+  # Run the test
+  - name: $_TEST_RUNNER_IMAGE
+    id: run-tests-gae-standard
+    dir: /
+    timeout: 10m
+    env: ["PROJECT_ID=$PROJECT_ID"]
+    args:
+      - gae-standard
+      - --runtime=go124
+      - --appsource=/workspace/opentelemetry-operations-go/e2e-test-server/appsource.zip
+
+logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
+substitutions:
+  _TEST_RUNNER_IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-e2e-testing:${SHORT_SHA}
+  _TEST_SERVER_IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-go-e2e-test-server:${SHORT_SHA}
