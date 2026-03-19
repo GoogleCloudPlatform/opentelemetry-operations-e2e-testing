@@ -12,36 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "google_cloud_run_v2_service" "default" {
-  name                = "e2etest-${terraform.workspace}"
-  location            = "us-central1"
-  deletion_protection = false
+resource "google_cloud_run_service" "default" {
+  name     = "e2etest-${terraform.workspace}"
+  location = "us-central1"
 
   timeouts {
     create = "6m"
   }
 
-  template {
-    scaling {
-      max_instance_count = 1
+  metadata {
+    annotations = {
+      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
     }
-    containers {
-      image = var.image
-      args = ["--config=env:OTEL_CONFIG"]
-      ports {
-        container_port = 8888
+  }
+
+  template {
+    metadata {
+      annotations = {
+        "autoscaling.knative.dev/maxScale" = "1"
       }
-      resources {
-        # If true, garbage-collect CPU when once a request finishes
-        cpu_idle = false
-      }
-      env {
-        name  = "PROJECT_ID"
-        value = var.project_id
-      }
-      env {
-        name = "OTEL_CONFIG"
-        value = jsonencode(module.otel_config.config)
+    }
+
+    spec {
+      containers {
+        image = var.image
+        args  = ["--config=env:OTEL_CONFIG"]
+
+        ports {
+          container_port = 8888
+        }
+
+        env {
+          name  = "PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "OTEL_CONFIG"
+          value = jsonencode(module.otel_config.config)
+        }
       }
     }
   }
@@ -55,4 +63,3 @@ module "otel_config" {
 variable "image" {
   type = string
 }
-
