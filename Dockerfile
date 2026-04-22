@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.23 AS gobuild
+FROM golang:1.26 AS gobuild
 WORKDIR /src
 ARG BUILD_TAGS
 
