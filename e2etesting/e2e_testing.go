@@ -134,6 +134,8 @@ type Args struct {
 	// resources created for debugging. If not provided, we generate a hex
 	// string.
 	TestRunID string `arg:"--test-run-id,env:TEST_RUN_ID" help:"Optional test run id to use to partition terraform resources"`
+
+	CollectorSmokeTests []string `arg:"--collector-smoke-tests,separate" help:"Smoke tests to run (e.g. --collector-smoke-tests metrics --collector-smoke-tests logs)"`
 }
 
 type Cleanup func()

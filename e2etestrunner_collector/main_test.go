@@ -21,6 +21,9 @@ var (
 
 func TestMain(m *testing.M) {
 	logger, ctx := e2etesting.InitTestMain(&args, setuptf.ApplyPersistentCollector)
+	if len(args.CollectorSmokeTests) == 0 {
+		args.CollectorSmokeTests = []string{"metrics", "logs", "traces"}
+	}
 	resourceFilter = fmt.Sprintf("otelcol_google_e2e:%s", args.TestRunID)
 	var setupFunc e2etesting.SetupCollectorFunc
 	switch {

@@ -24,7 +24,13 @@ const (
 	queryMaxAttempts     = 3
 )
 
-func TestMetrics(t *testing.T) {
+var smokeTests = map[string]func(t *testing.T){
+	"metrics": runMetricsTest,
+	"logs":    runLoggingTest,
+	"traces":  runTracesTest,
+}
+
+func runMetricsTest(t *testing.T) {
 	ctx := context.Background()
 	c, err := monitoring.NewMetricClient(ctx)
 	if err != nil {
@@ -82,7 +88,7 @@ func TestMetrics(t *testing.T) {
 	fmt.Printf("Found representative metric: %v\n", tsList[0].Metric)
 }
 
-func TestLogging(t *testing.T) {
+func runLoggingTest(t *testing.T) {
 	ctx := context.Background()
 	client, err := logadmin.NewClient(ctx, args.ProjectID)
 	if err != nil {
@@ -113,7 +119,7 @@ func TestLogging(t *testing.T) {
 	fmt.Println(fmt.Sprintf("Entry found: %v", entry))
 }
 
-func TestTraces(t *testing.T) {
+func runTracesTest(t *testing.T) {
 	ctx := context.Background()
 	cloudService, err := cloudtrace.NewService(ctx)
 	if err != nil {
@@ -131,4 +137,14 @@ func TestTraces(t *testing.T) {
 		t.Errorf(fmt.Sprintf("Could not find traces with resource attribute: %s", resourceFilter))
 	}
 	fmt.Println(fmt.Sprintf("Found traces with resource attribute%s", resourceFilter))
+}
+
+func TestSmoke(t *testing.T) {
+	for _, name := range args.CollectorSmokeTests {
+		if run, ok := smokeTests[name]; ok {
+			t.Run(name, run)
+		} else {
+			t.Errorf("Unknown smoke test: %s", name)
+		}
+	}
 }
