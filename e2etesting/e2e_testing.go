@@ -126,9 +126,10 @@ type Args struct {
 	CloudFunctionsGen2   *CloudFunctionsGen2Cmd   `arg:"subcommand:cloud-functions-gen2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
 
 	CmdWithProjectId
-	GoTestFlags        string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
-	HealthCheckTimeout time.Duration `arg:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"15m"`
-
+	GoTestFlags         string        `help:"go test flags to pass through, e.g. --gotestflags='-test.v'"`
+	HealthCheckTimeout  time.Duration `arg:"--health-check-timeout" help:"A duration (e.g. 5m) to wait for the test server health check. Default is 2m." default:"15m"`
+	TraceBackoffInitial time.Duration `arg:"--trace-backoff-initial" help:"Initial exponential backoff duration for trace retries" default:"1s"`
+	TraceBackoffTotal   time.Duration `arg:"--trace-backoff-total" help:"Total maximum duration for trace retries" default:"60s"`
 	// This is used in a new terraform workspace's name and in the GCP resources
 	// we create. Pass the GCB build ID in CI to get the build id formatted into
 	// resources created for debugging. If not provided, we generate a hex

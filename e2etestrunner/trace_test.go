@@ -75,8 +75,8 @@ func getTraceWithRetry(
 	traceId string,
 ) *cloudtrace.Trace {
 	var trace *cloudtrace.Trace
-	backoff, _ := retry.NewConstant(1 * time.Second)
-	backoff = retry.WithMaxDuration(time.Second*10, backoff)
+	backoff, _ := retry.NewExponential(args.TraceBackoffInitial)
+	backoff = retry.WithMaxDuration(args.TraceBackoffTotal, backoff)
 	err := retry.Do(ctx, backoff, func(ctx context.Context) error {
 		var err error
 		trace, err = cloudtraceService.Projects.Traces.Get(args.ProjectID, traceId).Context(ctx).Do()
