@@ -75,8 +75,8 @@ func getTraceWithRetry(
 	traceId string,
 ) *cloudtrace.Trace {
 	var trace *cloudtrace.Trace
-	backoff, _ := retry.NewConstant(1 * time.Second)
-	backoff = retry.WithMaxDuration(time.Second*10, backoff)
+	backoff, _ := retry.NewExponential(args.TraceBackoffInitial)
+	backoff = retry.WithMaxDuration(args.TraceBackoffTotal, backoff)
 	err := retry.Do(ctx, backoff, func(ctx context.Context) error {
 		var err error
 		trace, err = cloudtraceService.Projects.Traces.Get(args.ProjectID, traceId).Context(ctx).Do()
@@ -125,7 +125,7 @@ func TestBasicTrace(t *testing.T) {
 	)
 
 	// Ignore-able labels (resource, instrumentation library)
-	numLabels := 0
+	var nonResourceLabels []string
 	for key := range span.Labels {
 		if strings.HasPrefix(key, "g.co/r/") {
 			continue
@@ -138,11 +138,15 @@ func TestBasicTrace(t *testing.T) {
 		if strings.HasPrefix(key, "k8s.") {
 			continue
 		}
-		numLabels += 1
+		// Ignore specific GCP resource labels that are known to be added by the exporter.
+		if key == "gcp.project_id" {
+			continue
+		}
+		nonResourceLabels = append(nonResourceLabels, key)
 	}
 
-	if numLabels != 2 {
-		t.Fatalf("Expected exactly 2 non-resource labels, got %v", numLabels)
+	if len(nonResourceLabels) != 2 {
+		t.Fatalf("Expected exactly 2 non-resource labels, got %v. Labels found: %v", len(nonResourceLabels), nonResourceLabels)
 	}
 
 	labelCases := []struct {
