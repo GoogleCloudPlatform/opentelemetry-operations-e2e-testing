@@ -44,7 +44,7 @@ steps:
         cd opentelemetry-operations-go
         LATEST_TAG=$$(git describe --tags $$(git rev-list --tags --max-count=1))
         git checkout $$LATEST_TAG
-  - name: golang:1.24.2
+  - name: golang:1.25.5
     id: zip-code
     entrypoint: /bin/bash
     args:
@@ -64,7 +64,7 @@ steps:
     env: ["PROJECT_ID=$PROJECT_ID"]
     args:
       - gae-standard
-      - --runtime=go124
+      - --runtime=go125
       - --appsource=/workspace/opentelemetry-operations-go/e2e-test-server/appsource.zip
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
