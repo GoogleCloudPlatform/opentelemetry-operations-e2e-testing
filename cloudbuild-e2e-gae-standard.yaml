@@ -74,3 +74,4 @@ substitutions:
 
 options:
   pubsubTopic: projects/opentelemetry-ops-e2e/topics/e2e-cleanup
+serviceAccount: projects/opentelemetry-ops-e2e/serviceAccounts/e2e-cloudbuild-runner@opentelemetry-ops-e2e.iam.gserviceaccount.com
