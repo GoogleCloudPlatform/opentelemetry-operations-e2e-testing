@@ -72,3 +72,7 @@ logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:
   _TEST_RUNNER_IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-e2e-testing:${SHORT_SHA}
   _TEST_SERVER_IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/e2e-testing/opentelemetry-operations-go-e2e-test-server:${SHORT_SHA}
+
+options:
+  pubsubTopic: projects/opentelemetry-ops-e2e/topics/e2e-cleanup
+serviceAccount: projects/opentelemetry-ops-e2e/serviceAccounts/e2e-cloudbuild-runner@opentelemetry-ops-e2e.iam.gserviceaccount.com

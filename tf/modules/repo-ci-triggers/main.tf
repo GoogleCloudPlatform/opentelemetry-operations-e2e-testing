@@ -32,6 +32,7 @@ resource "google_cloudbuild_trigger" "build_image" {
     "build"
   ]
   include_build_logs = "INCLUDE_BUILD_LOGS_WITH_STATUS"
+  service_account    = var.service_account
 }
 
 // Run tests
@@ -52,8 +53,25 @@ resource "google_cloudbuild_trigger" "ci" {
   tags = [
     local.repo_short_name,
     each.key,
+    "terraform-resources"
   ]
   include_build_logs = "INCLUDE_BUILD_LOGS_WITH_STATUS"
+  service_account    = var.service_account
+
+  substitutions = {
+    _E2E_ENVIRONMENT = each.key
+  }
+}
+
+variable "service_account" {
+  type        = string
+  description = "The service account to use for the triggers"
+  default     = null
+}
+
+variable "project_id" {
+  type        = string
+  description = "The GCP project ID"
 }
 
 variable "repository" {

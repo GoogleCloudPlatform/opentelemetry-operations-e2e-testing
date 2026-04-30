@@ -19,6 +19,7 @@ package e2etestrunner
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
@@ -34,6 +35,33 @@ var (
 
 func TestMain(m *testing.M) {
 	logger, ctx := e2etesting.InitTestMain(&args, setuptf.ApplyPersistent)
+
+	if args.Cleanup != nil {
+		var tfDir string
+		switch args.Cleanup.Environment {
+		case "cloud-run":
+			tfDir = "tf/cloud-run"
+		case "gke":
+			tfDir = "tf/gke"
+		case "gce":
+			tfDir = "tf/gce"
+		case "gae":
+			tfDir = "tf/gae"
+		case "gae-standard":
+			tfDir = "tf/gae-standard"
+		case "cloud-functions-gen2":
+			tfDir = "tf/cloud-functions-gen2"
+		default:
+			logger.Panicf("Unknown environment for cleanup: %s", args.Cleanup.Environment)
+		}
+		// We might need dummy vars if TF requires them for destroy
+		tfVars := map[string]string{"image": "dummy", "runtime": "dummy"}
+		err := setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, tfDir, tfVars, logger)
+		if err != nil {
+			logger.Panic(err)
+		}
+		os.Exit(0)
+	}
 
 	var setupFunc e2etesting.SetupFunc
 	switch {
@@ -54,7 +82,12 @@ func TestMain(m *testing.M) {
 	}
 	client, cleanup, err := setupFunc(ctx, &args, logger)
 
-	defer cleanup()
+	if args.AutoCleanup {
+		defer cleanup()
+	} else {
+		logger.Println("Skipping auto-cleanup (default behavior)")
+	}
+
 	if err != nil {
 		logger.Panic(err)
 	}

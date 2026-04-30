@@ -255,3 +255,47 @@ func tfVarMapToArgs(
 	}
 	return tfVarArgs
 }
+
+// CleanupTf runs terraform destroy and deletes the workspace.
+func CleanupTf(
+	ctx context.Context,
+	projectID string,
+	testRunID string,
+	tfDir string,
+	tfVars map[string]string,
+	logger *log.Logger,
+) error {
+	tfVarArgs := tfVarMapToArgs(projectID, tfVars)
+	cmd := initCommand(ctx, projectID)
+	cmd.Args = append(cmd.Args, tfVarArgs...)
+	cmd.Dir = tfDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		return err
+	}
+
+	// Switch to target workspace
+	cmd = exec.CommandContext(ctx, "terraform", "workspace", "select", testRunID)
+	cmd.Dir = tfDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		return err
+	}
+
+	// Run terraform destroy
+	cmd = exec.CommandContext(
+		ctx,
+		"terraform",
+		"destroy",
+		"-input=false",
+		"-auto-approve",
+	)
+	cmd.Args = append(cmd.Args, tfVarArgs...)
+	cmd.Dir = tfDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		return err
+	}
+
+	// Delete workspace
+	deleteWorkspace(ctx, testRunID, tfDir, logger)
+
+	return nil
+}

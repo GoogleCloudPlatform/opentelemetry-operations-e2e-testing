@@ -13,25 +13,69 @@
 # limitations under the License.
 
 module "python" {
-  source     = "../modules/repo-ci-triggers"
-  repository = "opentelemetry-operations-python"
-  run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
+  source          = "../modules/repo-ci-triggers"
+  project_id      = var.project_id
+  repository      = "opentelemetry-operations-python"
+  run_on          = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
+  service_account = "projects/opentelemetry-ops-e2e/serviceAccounts/e2e-cloudbuild-runner@opentelemetry-ops-e2e.iam.gserviceaccount.com"
 }
 
 module "java" {
-  source     = "../modules/repo-ci-triggers"
-  repository = "opentelemetry-operations-java"
-  run_on     = ["local", "gce", "gke", "gae", "cloud-run", "cloud-functions-gen2"]
+  source          = "../modules/repo-ci-triggers"
+  project_id      = var.project_id
+  repository      = "opentelemetry-operations-java"
+  run_on          = ["local", "gce", "gke", "gae", "cloud-run", "cloud-functions-gen2"]
+  service_account = "projects/opentelemetry-ops-e2e/serviceAccounts/e2e-cloudbuild-runner@opentelemetry-ops-e2e.iam.gserviceaccount.com"
 }
 
 module "js" {
-  source     = "../modules/repo-ci-triggers"
-  repository = "opentelemetry-operations-js"
-  run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
+  source          = "../modules/repo-ci-triggers"
+  project_id      = var.project_id
+  repository      = "opentelemetry-operations-js"
+  run_on          = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
+  service_account = "projects/opentelemetry-ops-e2e/serviceAccounts/e2e-cloudbuild-runner@opentelemetry-ops-e2e.iam.gserviceaccount.com"
 }
 
 module "go" {
-  source     = "../modules/repo-ci-triggers"
-  repository = "opentelemetry-operations-go"
-  run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
+  source          = "../modules/repo-ci-triggers"
+  project_id      = var.project_id
+  repository      = "opentelemetry-operations-go"
+  run_on          = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
+  service_account = "projects/opentelemetry-ops-e2e/serviceAccounts/e2e-cloudbuild-runner@opentelemetry-ops-e2e.iam.gserviceaccount.com"
 }
+
+resource "google_pubsub_topic" "e2e_cleanup" {
+  name    = "e2e-cleanup"
+  project = var.project_id
+}
+
+resource "google_cloudbuild_trigger" "global_cleanup" {
+  name        = "global-e2e-cleanup"
+  description = "Global cleanup for E2E tests triggered by Pub/Sub"
+
+  pubsub_config {
+    topic = google_pubsub_topic.e2e_cleanup.id
+  }
+
+  # TODO: Add tag filter back once triggers are updated with tags in latchkey
+  filter = "_BUILD_STATUS == \"SUCCESS\" || _BUILD_STATUS == \"FAILURE\""
+
+  git_file_source {
+    path       = "cloudbuild-cleanup.yaml"
+    uri        = "https://github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing"
+    revision   = "refs/heads/durable-async-cleanup"
+    repo_type  = "GITHUB"
+  }
+
+  service_account = "projects/opentelemetry-ops-e2e/serviceAccounts/e2e-cloudbuild-runner@opentelemetry-ops-e2e.iam.gserviceaccount.com"
+
+  substitutions = {
+    _TEST_RUN_ID       = "$(body.message.data.id)"
+    _E2E_ENVIRONMENT   = "$(body.message.data.substitutions._E2E_ENVIRONMENT)"
+    _TEST_RUNNER_IMAGE = "$(body.message.data.substitutions._TEST_RUNNER_IMAGE)"
+    _BUILD_TAGS        = "$(body.message.data.tags)"
+    _BUILD_STATUS      = "$(body.message.data.status)"
+  }
+}
+
+# TODO: add to internal permission tooling (latchkey)

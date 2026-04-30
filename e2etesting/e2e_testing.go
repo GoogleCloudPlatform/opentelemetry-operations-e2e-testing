@@ -36,7 +36,7 @@ type CmdWithProjectId struct {
 }
 
 type CmdWithImage struct {
-	Image string `arg:"required" help:"docker container image to deploy and test"`
+	Image string `help:"docker container image to deploy and test"`
 }
 
 type LocalCmd struct {
@@ -80,7 +80,7 @@ type GkeCmd struct {
 type GaeCmd struct {
 	CmdWithImage
 
-	Runtime string `arg:"required" help:"The language runtime for the instrumented test server, used in naming the service"`
+	Runtime string `help:"The language runtime for the instrumented test server, used in naming the service"`
 }
 
 type GaeStandardCmd struct {
@@ -106,11 +106,17 @@ type CloudFunctionsGen2Cmd struct {
 	FunctionSource string `arg:"required" help:"The full path of the zip file that contains the code source that needs to run within the CloudFunction"`
 }
 
+type CleanupCmd struct {
+	Environment string `arg:"required" help:"The environment to clean up (e.g. cloud-run)"`
+}
+
 type Args struct {
 	// This subcommand is a special case, it doesn't run any tests. It just
 	// applies the persistent resources which are used across tests. See
 	// tf/persistent/README.md for details on what is in there.
 	ApplyPersistent *ApplyPersistent `arg:"subcommand:apply-persistent" help:"Terraform apply the resources in tf/persistent and exit (does not run tests)."`
+
+	Cleanup              *CleanupCmd              `arg:"subcommand:cleanup" help:"Clean up resources for a test run"`
 
 	Local                *LocalCmd                `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
 	Gke                  *GkeCmd                  `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
@@ -135,6 +141,7 @@ type Args struct {
 	// resources created for debugging. If not provided, we generate a hex
 	// string.
 	TestRunID string `arg:"--test-run-id,env:TEST_RUN_ID" help:"Optional test run id to use to partition terraform resources"`
+	AutoCleanup bool   `arg:"--auto-cleanup" help:"Enable automatic cleanup after tests (default: false). For deferred cleanup, use the 'cleanup' subcommand."`
 }
 
 type Cleanup func()
