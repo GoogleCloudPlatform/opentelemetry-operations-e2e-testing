@@ -58,7 +58,8 @@ resource "google_cloudbuild_trigger" "global_cleanup" {
   }
 
   substitutions = {
-    _TEST_RUN_ID     = "$(body.message.data.id)"
-    _E2E_ENVIRONMENT = "$(body.message.data.substitutions._E2E_ENVIRONMENT)"
+    _TEST_RUN_ID       = "$(body.message.data.id)"
+    _E2E_ENVIRONMENT   = "$(body.message.data.substitutions._E2E_ENVIRONMENT)"
+    _TEST_RUNNER_IMAGE = "$(body.message.data.substitutions._TEST_RUNNER_IMAGE)"
   }
 }

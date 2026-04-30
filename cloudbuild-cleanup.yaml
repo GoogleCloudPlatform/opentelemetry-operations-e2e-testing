@@ -1,15 +1,8 @@
 steps:
-  - name: 'hashicorp/terraform:1.7.0'
-    entrypoint: 'sh'
+  - name: $_TEST_RUNNER_IMAGE
+    dir: /
     args:
-      - '-c'
-      - |
-        if [ -z "$_E2E_ENVIRONMENT" ]; then
-          echo "Error: _E2E_ENVIRONMENT is not set."
-          exit 1
-        fi
-        echo "Determined environment: $_E2E_ENVIRONMENT"
-        cd tf/$_E2E_ENVIRONMENT
-        terraform init -backend-config=bucket=$PROJECT_ID-e2e-tfstate
-        terraform workspace select $_TEST_RUN_ID
-        terraform destroy -auto-approve -var=project_id=$PROJECT_ID -var=image=dummy -var=runtime=dummy
+      - cleanup
+      - --environment=$_E2E_ENVIRONMENT
+      - --project-id=$PROJECT_ID
+      - --test-run-id=$_TEST_RUN_ID
