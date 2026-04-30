@@ -14,24 +14,28 @@
 
 module "python" {
   source     = "../modules/repo-ci-triggers"
+  project_id = var.project_id
   repository = "opentelemetry-operations-python"
   run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
 }
 
 module "java" {
   source     = "../modules/repo-ci-triggers"
+  project_id = var.project_id
   repository = "opentelemetry-operations-java"
   run_on     = ["local", "gce", "gke", "gae", "cloud-run", "cloud-functions-gen2"]
 }
 
 module "js" {
   source     = "../modules/repo-ci-triggers"
+  project_id = var.project_id
   repository = "opentelemetry-operations-js"
   run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
 }
 
 module "go" {
   source     = "../modules/repo-ci-triggers"
+  project_id = var.project_id
   repository = "opentelemetry-operations-go"
   run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
 }

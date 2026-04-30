@@ -36,7 +36,7 @@ type CmdWithProjectId struct {
 }
 
 type CmdWithImage struct {
-	Image string `arg:"required" help:"docker container image to deploy and test"`
+	Image string `help:"docker container image to deploy and test"`
 }
 
 type LocalCmd struct {
@@ -80,7 +80,7 @@ type GkeCmd struct {
 type GaeCmd struct {
 	CmdWithImage
 
-	Runtime string `arg:"required" help:"The language runtime for the instrumented test server, used in naming the service"`
+	Runtime string `help:"The language runtime for the instrumented test server, used in naming the service"`
 }
 
 type GaeStandardCmd struct {
@@ -135,6 +135,7 @@ type Args struct {
 	// resources created for debugging. If not provided, we generate a hex
 	// string.
 	TestRunID string `arg:"--test-run-id,env:TEST_RUN_ID" help:"Optional test run id to use to partition terraform resources"`
+	SkipCleanup bool   `arg:"--skip-cleanup" help:"Skip cleanup after tests"`
 }
 
 type Cleanup func()

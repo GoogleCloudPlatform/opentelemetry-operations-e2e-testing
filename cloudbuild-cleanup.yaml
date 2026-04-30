@@ -1,0 +1,10 @@
+steps:
+  - name: 'hashicorp/terraform:1.7.0'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd tf/$_ENVIRONMENT
+        terraform init -backend-config=bucket=$PROJECT_ID-e2e-tfstate
+        terraform workspace select $_TEST_RUN_ID
+        terraform destroy -auto-approve -var=project_id=$PROJECT_ID -var=image=dummy -var=runtime=dummy
