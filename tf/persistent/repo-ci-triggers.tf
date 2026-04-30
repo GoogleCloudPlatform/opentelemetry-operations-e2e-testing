@@ -39,3 +39,26 @@ module "go" {
   repository = "opentelemetry-operations-go"
   run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
 }
+
+resource "google_cloudbuild_trigger" "global_cleanup" {
+  name        = "global-e2e-cleanup"
+  description = "Global cleanup for E2E tests triggered by Pub/Sub"
+
+  pubsub_config {
+    topic = "projects/${var.project_id}/topics/cloud-builds"
+  }
+
+  filter = "\"terraform-resources\" in body.message.data.tags && (body.message.data.status == \"SUCCESS\" || body.message.data.status == \"FAILURE\")"
+
+  git_file_source {
+    path       = "cloudbuild-cleanup.yaml"
+    uri        = "https://github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing"
+    revision   = "refs/heads/main"
+    repo_type  = "GITHUB"
+  }
+
+  substitutions = {
+    _TEST_RUN_ID     = "$(body.message.data.id)"
+    _E2E_ENVIRONMENT = "$(body.message.data.substitutions._E2E_ENVIRONMENT)"
+  }
+}

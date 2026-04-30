@@ -66,6 +66,7 @@ steps:
       - gae-standard
       - --runtime=go125
       - --appsource=/workspace/opentelemetry-operations-go/e2e-test-server/appsource.zip
+      - --skip-cleanup
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:

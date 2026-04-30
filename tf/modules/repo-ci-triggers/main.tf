@@ -52,34 +52,12 @@ resource "google_cloudbuild_trigger" "ci" {
   tags = [
     local.repo_short_name,
     each.key,
+    "terraform-resources"
   ]
   include_build_logs = "INCLUDE_BUILD_LOGS_WITH_STATUS"
-}
-
-// Cleanup after tests
-resource "google_cloudbuild_trigger" "cleanup" {
-  for_each = var.run_on
-
-  description = "Cleanup after E2E tests on ${each.key} for ${var.repository}"
-  name        = "${local.repo_short_name}-e2e-${each.key}-cleanup"
-
-  pubsub_config {
-    topic = "projects/${var.project_id}/topics/cloud-builds"
-  }
-
-  filter = "body.message.data.buildTriggerId == \"${google_cloudbuild_trigger.ci[each.key].id}\" && (body.message.data.status == \"SUCCESS\" || body.message.data.status == \"FAILURE\")"
-
-  git_file_source {
-    path       = "cloudbuild-cleanup.yaml"
-    uri        = "https://github.com/GoogleCloudPlatform/${var.repository}"
-    revision   = "refs/heads/${var.main_branch}"
-    repo_type  = "GITHUB"
-  }
 
   substitutions = {
-    _TEST_RUN_ID       = "$(body.message.data.substitutions._TEST_RUN_ID)"
-    _ENVIRONMENT       = each.key
-    _TEST_RUNNER_IMAGE = "$(body.message.data.substitutions._TEST_RUNNER_IMAGE)"
+    _E2E_ENVIRONMENT = each.key
   }
 }
 
