@@ -67,7 +67,6 @@ steps:
       - --runtime=go125
       - --functionsource=/workspace/opentelemetry-operations-go/e2e-test-server/cloud_functions/function-source.zip
       - --entrypoint=HandleCloudFunction
-      - --skip-cleanup
 
 logsBucket: gs://opentelemetry-ops-e2e-cloud-build-logs
 substitutions:

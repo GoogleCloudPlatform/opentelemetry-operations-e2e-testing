@@ -141,7 +141,7 @@ type Args struct {
 	// resources created for debugging. If not provided, we generate a hex
 	// string.
 	TestRunID string `arg:"--test-run-id,env:TEST_RUN_ID" help:"Optional test run id to use to partition terraform resources"`
-	SkipCleanup bool   `arg:"--skip-cleanup" help:"Skip cleanup after tests"`
+	AutoCleanup bool   `arg:"--auto-cleanup" help:"Enable automatic cleanup after tests (default: false). For deferred cleanup, use the 'cleanup' subcommand."`
 }
 
 type Cleanup func()
