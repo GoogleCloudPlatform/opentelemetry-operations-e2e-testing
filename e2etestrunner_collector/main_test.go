@@ -20,7 +20,10 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logger, ctx := e2etesting.InitTestMain(&args, setuptf.ApplyPersistentCollector)
+	logger, ctx, shouldExit := e2etesting.InitTestMain(&args, setuptf.ApplyPersistentCollector)
+	if shouldExit {
+		return
+	}
 	resourceFilter = fmt.Sprintf("otelcol_google_e2e:%s", args.TestRunID)
 	var setupFunc e2etesting.SetupCollectorFunc
 	switch {
