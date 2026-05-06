@@ -14,6 +14,58 @@
 	<tbody>
 			<tr>
 				<td rowspan=7>
+					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing">opentelemetry-operations-e2e-testing</a>
+				</td>
+				<td>cloud-functions-gen2</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>cloud-run</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>gae</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>gae-standard</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+			</tr>
+			<tr>
+				<td>gce</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>gke</td>
+					<td>:leftwards_arrow_with_hook:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+					<td>:white_check_mark:</td>
+			</tr>
+			<tr>
+				<td>local</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+			</tr>
+			<tr>
+				<td rowspan=7>
 					<a href="https://github.com/GoogleCloudPlatform/opentelemetry-operations-go">opentelemetry-operations-go</a>
 				</td>
 				<td>cloud-functions-gen2</td>
