@@ -35,3 +35,9 @@ module "go" {
   repository = "opentelemetry-operations-go"
   run_on     = ["local", "gce", "gke", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
 }
+
+module "e2e_testing" {
+  source     = "../modules/repo-ci-triggers"
+  repository = "opentelemetry-operations-e2e-testing"
+  run_on     = ["gke", "gce", "gae", "gae-standard", "cloud-run", "cloud-functions-gen2"]
+}

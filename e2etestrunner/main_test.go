@@ -33,7 +33,10 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	logger, ctx := e2etesting.InitTestMain(&args, setuptf.ApplyPersistent)
+	logger, ctx, shouldExit := e2etesting.InitTestMain(&args, setuptf.ApplyPersistent)
+	if shouldExit {
+		return
+	}
 
 	var setupFunc e2etesting.SetupFunc
 	switch {
