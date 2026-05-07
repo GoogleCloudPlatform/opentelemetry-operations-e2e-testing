@@ -30,6 +30,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -103,6 +104,15 @@ var (
 	triggerNameRe  = regexp.MustCompile(`^ops-\w+-e2e-.*$`)
 	scenarioPassRe = regexp.MustCompile(`: --- PASS:\s+([\w_]+)`)
 	scenarioSkipRe = regexp.MustCompile(`: --- SKIP:\s+([\w_]+)`)
+	knownPlatforms = []string{
+		"local",
+		"gke",
+		"gce",
+		"gae",
+		"gae-standard",
+		"cloud-run",
+		"cloud-functions-gen2",
+	}
 )
 
 func main() {
@@ -201,9 +211,20 @@ func handleTrigger(
 		log.Printf("Skipping trigger %v which doesn't match regex", trigger.Name)
 		return nil, nil
 	}
+	platform := ""
+	for _, tag := range trigger.Tags {
+		if slices.Contains(knownPlatforms, tag) {
+			platform = tag
+			break
+		}
+	}
+	if platform == "" || trigger.Github == nil {
+		log.Printf("Skipping trigger %v", trigger.Name)
+		return nil, nil
+	}
 	res := &result{
 		RepoName: trigger.Github.Name,
-		Platform: trigger.Tags[1],
+		Platform: platform,
 		Statuses: make(map[string]status),
 	}
 
