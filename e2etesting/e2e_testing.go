@@ -154,7 +154,7 @@ func NoopCleanup() {}
 
 type ApplyPersistentFunc func(ctx context.Context, projectID string, autoApprove bool, logger *log.Logger) error
 
-func InitTestMain(args *Args, applyPersistent ApplyPersistentFunc) (*log.Logger, context.Context) {
+func InitTestMain(args *Args, applyPersistent ApplyPersistentFunc) (*log.Logger, context.Context, bool) {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	p := arg.MustParse(args)
 	if p.Subcommand() == nil {
@@ -170,7 +170,7 @@ func InitTestMain(args *Args, applyPersistent ApplyPersistentFunc) (*log.Logger,
 		if err != nil {
 			logger.Panic(err)
 		}
-		return nil, nil
+		return nil, nil, true
 	}
 
 	// hacky but works
@@ -185,5 +185,5 @@ func InitTestMain(args *Args, applyPersistent ApplyPersistentFunc) (*log.Logger,
 		}
 		args.TestRunID = hex
 	}
-	return logger, ctx
+	return logger, ctx, false
 }
