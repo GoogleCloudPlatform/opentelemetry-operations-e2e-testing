@@ -69,9 +69,8 @@ func initCommand(ctx context.Context, projectID string) *exec.Cmd {
 	)
 }
 
-// Runs the sequence of terraform commands most environemnts need, returns the
-// output bytes of `terraform output -json` and a cleanup function to teardown
-// the created resources.
+// Runs the sequence of terraform commands most environments need, returns the
+// parsed PubsubInfo from `terraform output -json`.
 //
 // 1. Run terraform init
 // 2. Create a new terraform workspace for the test run ID
@@ -86,34 +85,16 @@ func SetupTf(
 	tfDir string, // the Dir to set when running terraform commands in e.g. tf/gke
 	tfVars map[string]string, // key-values for terraform input vars to send to terraform
 	logger *log.Logger,
-) (*PubsubInfo, func(), error) {
+) (*PubsubInfo, error) {
 	tfVarArgs := tfVarMapToArgs(projectID, tfVars)
 	cmd := initCommand(ctx, projectID)
 	cmd.Args = append(cmd.Args, tfVarArgs...)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
-		return nil, func() {}, err
+		return nil, err
 	}
 
 	logger.Printf("Running %s with image: %s\n", tfDir, tfVars["image"])
-
-	cleanup := func() {
-		defer deleteWorkspace(ctx, testRunID, tfDir, logger)
-
-		// Run terraform destroy
-		cmd = exec.CommandContext(
-			ctx,
-			"terraform",
-			"destroy",
-			"-input=false",
-			"-auto-approve",
-		)
-		cmd.Args = append(cmd.Args, tfVarArgs...)
-		cmd.Dir = tfDir
-		if err := runWithOutput(cmd, logger); err != nil {
-			logger.Panic(err)
-		}
-	}
 
 	// Create new terraform workspace
 	cmd = exec.CommandContext(ctx, "terraform", "workspace", "new", testRunID)
@@ -124,7 +105,7 @@ func SetupTf(
 		cmd.Dir = tfDir
 
 		if err := runWithOutput(cmd, logger); err != nil {
-			return nil, cleanup, err
+			return nil, err
 		}
 	}
 
@@ -139,7 +120,7 @@ func SetupTf(
 	cmd.Args = append(cmd.Args, tfVarArgs...)
 	cmd.Dir = tfDir
 	if err := runWithOutput(cmd, logger); err != nil {
-		return nil, cleanup, err
+		return nil, err
 	}
 
 	// Run terraform output
@@ -148,14 +129,14 @@ func SetupTf(
 	out, err := cmd.Output()
 	if err != nil {
 		logger.Println(err)
-		return nil, cleanup, err
+		return nil, err
 	}
 
 	tfOutput := &tfOutput{}
 	if err := json.Unmarshal(out, tfOutput); err != nil {
-		return nil, cleanup, err
+		return nil, err
 	}
-	return &tfOutput.PubsubInfoWrapper.Value, cleanup, nil
+	return &tfOutput.PubsubInfoWrapper.Value, nil
 }
 
 func ApplyPersistent(
@@ -254,4 +235,48 @@ func tfVarMapToArgs(
 		tfVarArgs = append(tfVarArgs, fmt.Sprintf("-var=%v=%v", k, v))
 	}
 	return tfVarArgs
+}
+
+// CleanupTf runs terraform destroy and deletes the workspace.
+func CleanupTf(
+	ctx context.Context,
+	projectID string,
+	testRunID string,
+	tfDir string,
+	logger *log.Logger,
+) error {
+	tfVarArgs := []string{fmt.Sprintf("-var=project_id=%s", projectID)}
+	cmd := initCommand(ctx, projectID)
+	cmd.Dir = tfDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		logger.Printf("error cleaning up terraform (init) in %s: %v", tfDir, err)
+		return err
+	}
+
+	// Switch to target workspace
+	cmd = exec.CommandContext(ctx, "terraform", "workspace", "select", testRunID)
+	cmd.Dir = tfDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		logger.Printf("error cleaning up terraform (workspace select %s) in %s: %v", testRunID, tfDir, err)
+		return err
+	}
+
+	// Run terraform destroy
+	cmd = exec.CommandContext(
+		ctx,
+		"terraform",
+		"destroy",
+		"-input=false",
+		"-auto-approve",
+	)
+	cmd.Args = append(cmd.Args, tfVarArgs...)
+	cmd.Dir = tfDir
+	if err := runWithOutput(cmd, logger); err != nil {
+		logger.Printf("error cleaning up terraform (destroy) in %s: %v", tfDir, err)
+		return err
+	}
+
+	deleteWorkspace(ctx, testRunID, tfDir, logger)
+
+	return nil
 }

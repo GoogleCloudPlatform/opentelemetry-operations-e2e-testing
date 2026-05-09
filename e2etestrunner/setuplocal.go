@@ -16,7 +16,6 @@ package e2etestrunner
 
 import (
 	"context"
-	"fmt"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
@@ -26,7 +25,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 )
@@ -40,7 +38,12 @@ func SetupLocal(
 	args *e2etesting.Args,
 	logger *log.Logger,
 ) (*testclient.Client, e2etesting.Cleanup, error) {
-	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
+	// 1. Define basic cleanup that only does Terraform
+	cleanupTf := func() {
+		setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, "tf/destroy", logger)
+	}
+
+	pubsubInfo, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
@@ -49,6 +52,7 @@ func SetupLocal(
 		logger,
 	)
 	if err != nil {
+		// If SetupTf fails, we still want to try destroying workspace
 		return nil, cleanupTf, err
 	}
 
@@ -60,53 +64,45 @@ func SetupLocal(
 
 	createdRes, err := createContainer(ctx, cli, args, pubsubInfo, logger)
 	if err != nil {
-		if errdefs.IsNotFound(err) {
-			err = fmt.Errorf(
-				`docker image not found, try running "docker pull %v": %w`,
-				args.Local.Image,
-				err,
-			)
-		}
+		// Container creation failed, so no container to remove, but must cleanup TF
 		return nil, cleanupTf, err
 	}
 
-	if len(createdRes.Warnings) != 0 {
-		logger.Printf("Started with warnings: %v", createdRes.Warnings)
-	}
 	containerID := createdRes.ID
-	removeContainer := func() {
+
+	// 2. Now we have a container, update cleanup to do both!
+	cleanupAll := func() {
+		logger.Printf("Stopping and removing container ID %v\n", containerID)
+		timeout := 15
+		err := cli.ContainerStop(ctx, containerID, container.StopOptions{Timeout: &timeout})
+		if err != nil {
+			logger.Printf("Error stopping container: %v", err)
+		}
+
+		// Defer ensures they run even if something panics
 		defer cleanupTf()
+
 		err = cli.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true})
 		if err != nil {
-			logger.Panic(err)
+			logger.Printf("Error removing container: %v", err)
 		}
 	}
 
 	err = cli.ContainerStart(ctx, containerID, container.StartOptions{})
 	if err != nil {
-		return nil, removeContainer, err
-	}
-
-	cleanup := func() {
-		logger.Printf("Stopping and removing container ID %v\n", containerID)
-		timeout := 15
-		err = cli.ContainerStop(ctx, containerID, container.StopOptions{Timeout: &timeout})
-		defer removeContainer()
-		if err != nil {
-			logger.Panic(err)
-		}
+		return nil, cleanupAll, err
 	}
 
 	err = startForwardingContainerLogs(ctx, cli, containerID, logger)
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanupAll, err
 	}
 
 	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)
 	if err != nil {
-		return nil, cleanup, err
+		return nil, cleanupAll, err
 	}
-	return client, cleanup, err
+	return client, cleanupAll, nil
 }
 
 func createContainer(

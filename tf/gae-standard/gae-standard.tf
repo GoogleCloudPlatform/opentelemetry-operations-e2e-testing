@@ -21,7 +21,7 @@ resource "google_app_engine_standard_app_version" "test_service" {
 
   version_id = "v1"
   project    = var.project_id
-  service    = "standard-${var.runtime}-${terraform.workspace}"
+  service    = "standard-${var.runtime}-${substr(replace(terraform.workspace, "-", ""), 0, 12)}"
   runtime    = var.runtime
 
   deployment {
