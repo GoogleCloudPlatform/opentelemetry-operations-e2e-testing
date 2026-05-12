@@ -1,0 +1,13 @@
+steps:
+  - name: $_TEST_RUNNER_IMAGE
+    id: cleanup
+    dir: /
+    timeout: 600s
+    args:
+      - cleanup
+      - --environment=$_E2E_ENVIRONMENT
+      - --project-id=$PROJECT_ID
+      - --test-run-id=$_TEST_RUN_ID
+
+substitutions:
+  _TEST_RUN_ID: $BUILD_ID

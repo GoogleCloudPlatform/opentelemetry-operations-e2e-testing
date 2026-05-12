@@ -30,7 +30,10 @@ func SetupGae(
 	args *e2etesting.Args,
 	logger *log.Logger,
 ) (*testclient.Client, e2etesting.Cleanup, error) {
-	pubsubInfo, cleanupTf, err := setuptf.SetupTf(
+	cleanup := func() {
+		setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, logger)
+	}
+	pubsubInfo, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
@@ -42,9 +45,9 @@ func SetupGae(
 		logger,
 	)
 	if err != nil {
-		return nil, cleanupTf, err
+		return nil, cleanup, err
 	}
 
 	client, err := testclient.New(ctx, args.ProjectID, pubsubInfo)
-	return client, cleanupTf, err
+	return client, cleanup, err
 }

@@ -18,7 +18,10 @@ func SetupGkeOperatorCollector(
 	args *e2etesting.Args,
 	logger *log.Logger,
 ) (e2etesting.Cleanup, error) {
-	_, cleanupTf, err := setuptf.SetupTf(
+	cleanup := func() {
+		setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, logger)
+	}
+	_, err := setuptf.SetupTf(
 		ctx,
 		args.ProjectID,
 		args.TestRunID,
@@ -28,6 +31,5 @@ func SetupGkeOperatorCollector(
 		},
 		logger,
 	)
-
-	return cleanupTf, err
+	return cleanup, err
 }
