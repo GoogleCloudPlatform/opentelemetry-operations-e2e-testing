@@ -31,7 +31,7 @@ func SetupGaeStandard(
 	logger *log.Logger,
 ) (*testclient.Client, e2etesting.Cleanup, error) {
 	cleanup := func() {
-		setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, "tf/destroy", logger)
+		setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, logger)
 	}
 	pubsubInfo, err := setuptf.SetupTf(
 		ctx,

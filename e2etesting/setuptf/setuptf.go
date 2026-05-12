@@ -242,9 +242,9 @@ func CleanupTf(
 	ctx context.Context,
 	projectID string,
 	testRunID string,
-	tfDir string,
 	logger *log.Logger,
 ) error {
+	const tfDir = "tf/destroy"
 	tfVarArgs := []string{fmt.Sprintf("-var=project_id=%s", projectID)}
 	cmd := initCommand(ctx, projectID)
 	cmd.Dir = tfDir

@@ -172,8 +172,7 @@ func InitTestMain(args *Args, applyPersistent ApplyPersistentFunc) (*log.Logger,
 
 	// Handle cleanup subcommand
 	if args.Cleanup != nil {
-		tfDir := "tf/destroy"
-		err := setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, tfDir, logger)
+		err := setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, logger)
 		if err != nil {
 			logger.Panic(err)
 		}
