@@ -16,6 +16,7 @@ package e2etestrunner
 
 import (
 	"context"
+	"fmt"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting/setuptf"
 	"log"
@@ -25,6 +26,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 )
@@ -64,11 +66,21 @@ func SetupLocal(
 
 	createdRes, err := createContainer(ctx, cli, args, pubsubInfo, logger)
 	if err != nil {
+		if errdefs.IsNotFound(err) {
+			err = fmt.Errorf(
+				`docker image not found, try running "docker pull %v": %w`,
+				args.Local.Image,
+				err,
+			)
+		}
 		// Container creation failed, so no container to remove, but must cleanup TF
 		return nil, cleanupTf, err
 	}
 
 	containerID := createdRes.ID
+	if len(createdRes.Warnings) != 0 {
+		logger.Printf("Started with warnings: %v", createdRes.Warnings)
+	}
 
 	// 2. Now we have a container, update cleanup to do both!
 	cleanupAll := func() {
