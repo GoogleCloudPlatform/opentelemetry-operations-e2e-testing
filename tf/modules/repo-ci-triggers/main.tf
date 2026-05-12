@@ -55,8 +55,6 @@ resource "google_cloudbuild_trigger" "ci" {
   ]
   include_build_logs = "INCLUDE_BUILD_LOGS_WITH_STATUS"
   service_account    = var.service_account
-
-
 }
 
 variable "service_account" {
