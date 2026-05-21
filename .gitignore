@@ -19,3 +19,6 @@ terraform*
 
 go.work
 go.work.sum
+
+# Ignore nested jj workspace
+concurrent_task/

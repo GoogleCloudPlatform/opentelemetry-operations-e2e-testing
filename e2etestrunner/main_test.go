@@ -57,7 +57,12 @@ func TestMain(m *testing.M) {
 	}
 	client, cleanup, err := setupFunc(ctx, &args, logger)
 
-	defer cleanup()
+	if !args.SkipCleanup {
+		defer cleanup()
+	} else {
+		logger.Println("Skipping auto-cleanup (explicitly requested)")
+	}
+
 	if err != nil {
 		logger.Panic(err)
 	}

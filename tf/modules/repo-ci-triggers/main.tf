@@ -51,9 +51,20 @@ resource "google_cloudbuild_trigger" "ci" {
   name = "${local.repo_short_name}-e2e-${each.key}"
   tags = [
     local.repo_short_name,
-    each.key,
+    each.key
   ]
   include_build_logs = "INCLUDE_BUILD_LOGS_WITH_STATUS"
+  service_account    = var.service_account
+}
+
+variable "service_account" {
+  type        = string
+  description = "The service account to use for the triggers"
+  default     = null
+}
+variable "project_id" {
+  type        = string
+  description = "The GCP project ID"
 }
 
 variable "repository" {

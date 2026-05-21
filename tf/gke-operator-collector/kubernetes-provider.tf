@@ -1,0 +1,1 @@
+../common/kubernetes-provider.tf
