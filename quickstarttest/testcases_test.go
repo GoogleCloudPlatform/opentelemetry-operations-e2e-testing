@@ -49,7 +49,7 @@ func TestVerifyPromMetric(t *testing.T) {
 			otelcol_exporter_sent_log_records{exporter="googlecloud"} 631
 			`,
 			testCase: testCase{
-				exporter:   "googlecloud",
+				exporters:  []string{"googlecloud"},
 				metricName: "otelcol_exporter_sent_log_records",
 				threshold:  100,
 			},
@@ -63,7 +63,7 @@ func TestVerifyPromMetric(t *testing.T) {
 			`,
 			expectFail: true,
 			testCase: testCase{
-				exporter:   "googlecloud",
+				exporters:  []string{"googlecloud"},
 				metricName: "otelcol_exporter_sent_log_records",
 				threshold:  100,
 			},
@@ -72,7 +72,7 @@ func TestVerifyPromMetric(t *testing.T) {
 			name:       "metric is not present fail",
 			textFormat: ``,
 			testCase: testCase{
-				exporter:   "googlecloud",
+				exporters:  []string{"googlecloud"},
 				metricName: "otelcol_exporter_sent_log_records",
 				threshold:  100,
 			},
@@ -87,7 +87,7 @@ func TestVerifyPromMetric(t *testing.T) {
 			`,
 			expectFail: true,
 			testCase: testCase{
-				exporter:   "fooexporter",
+				exporters:  []string{"fooexporter"},
 				metricName: "otelcol_exporter_sent_log_records",
 				threshold:  100,
 			},
@@ -123,6 +123,27 @@ func TestVerifyPromRealTestCasesSuccess(t *testing.T) {
 	# HELP otelcol_exporter_sent_spans Number of spans successfully sent to destination.
 	# TYPE otelcol_exporter_sent_spans counter
 	otelcol_exporter_sent_spans{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.107.0"} 499
+	`))
+	require.NoError(t, err)
+
+	for _, tc := range testCases {
+		verifyPromMetric(t, actual, tc)
+	}
+}
+
+func TestVerifyPromRealTestCasesSuccessOTLP(t *testing.T) {
+	parser := expfmt.NewTextParser(model.UTF8Validation)
+	// Taken from a real run of the quickstart with OTLP exporters
+	actual, err := parser.TextToMetricFamilies(strings.NewReader(`
+	# HELP otelcol_exporter_sent_log_records Number of log record successfully sent to destination.
+	# TYPE otelcol_exporter_sent_log_records counter
+	otelcol_exporter_sent_log_records{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.155.0"} 437
+	# HELP otelcol_exporter_sent_metric_points Number of metric points successfully sent to destination.
+	# TYPE otelcol_exporter_sent_metric_points counter
+	otelcol_exporter_sent_metric_points{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.155.0"} 333
+	# HELP otelcol_exporter_sent_spans Number of spans successfully sent to destination.
+	# TYPE otelcol_exporter_sent_spans counter
+	otelcol_exporter_sent_spans{exporter="otlphttp",service_instance_id="cc2396b4-e313-4c5a-8c35-0cb221a02fa8",service_name="otelcol-contrib",service_version="0.155.0"} 499
 	`))
 	require.NoError(t, err)
 

@@ -41,14 +41,14 @@ const (
 
 type testCase struct {
 	metricName string
-	exporter   string
+	exporters  []string
 	threshold  float64
 }
 
 var testCases = []testCase{
-	{metricName: "otelcol_exporter_sent_spans", exporter: "otlphttp", threshold: sentItemsThreshold},
-	{metricName: "otelcol_exporter_sent_log_records", exporter: "googlecloud", threshold: sentItemsThreshold},
-	{metricName: "otelcol_exporter_sent_metric_points", exporter: "googlemanagedprometheus", threshold: sentItemsThreshold},
+	{metricName: "otelcol_exporter_sent_spans", exporters: []string{"otlphttp", "otlp_http", "otlp", "googlecloud"}, threshold: sentItemsThreshold},
+	{metricName: "otelcol_exporter_sent_log_records", exporters: []string{"googlecloud", "otlphttp", "otlp_http", "otlp"}, threshold: sentItemsThreshold},
+	{metricName: "otelcol_exporter_sent_metric_points", exporters: []string{"googlemanagedprometheus", "otlphttp", "otlp_http", "otlp", "googlecloud"}, threshold: sentItemsThreshold},
 }
 
 // InstrumentationQuickstartTest runs the instrumentation quickstart docker compose setup in
@@ -173,12 +173,16 @@ func verifyPromMetric(t assert.TestingT, promMetrics map[string]*dto.MetricFamil
 
 	for _, metric := range mf.Metric {
 		for _, labelPair := range metric.GetLabel() {
-			if labelPair.GetName() == "exporter" && labelPair.GetValue() == tc.exporter {
-				value := metric.GetCounter().GetValue()
-				assert.Greaterf(t, value, tc.threshold, "Metric %v was expected to have value > %v, got %v", metric, sentItemsThreshold, value)
-				return
+			if labelPair.GetName() == "exporter" {
+				for _, expectedExporter := range tc.exporters {
+					if labelPair.GetValue() == expectedExporter {
+						value := metric.GetCounter().GetValue()
+						assert.Greaterf(t, value, tc.threshold, "Metric %v was expected to have value > %v, got %v", metric, sentItemsThreshold, value)
+						return
+					}
+				}
 			}
 		}
 	}
-	assert.Failf(t, "Could not find a metric sample for exporter=%v, got metrics %v", tc.exporter, mf)
+	assert.Fail(t, fmt.Sprintf("Could not find a metric sample for exporters=%v, got metrics %v", tc.exporters, mf))
 }
