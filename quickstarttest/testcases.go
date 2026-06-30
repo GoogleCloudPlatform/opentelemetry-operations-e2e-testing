@@ -45,6 +45,9 @@ type testCase struct {
 	threshold  float64
 }
 
+// Multiple strings for exporters are the names of the exporters that the testcases will recognize.
+// Multiple variations of otlp exporter strings are used to ensure that the tests recognize the exporters from various collector versions.
+// The otlp exporters have been referred to by different names under different collector versions.
 var testCases = []testCase{
 	{metricName: "otelcol_exporter_sent_spans", exporters: []string{"otlphttp", "otlp_http", "otlp", "googlecloud"}, threshold: sentItemsThreshold},
 	{metricName: "otelcol_exporter_sent_log_records", exporters: []string{"googlecloud", "otlphttp", "otlp_http", "otlp"}, threshold: sentItemsThreshold},
