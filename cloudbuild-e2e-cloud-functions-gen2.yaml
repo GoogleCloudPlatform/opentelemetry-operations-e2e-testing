@@ -44,7 +44,7 @@ steps:
         cd opentelemetry-operations-go
         LATEST_TAG=$$(git describe --tags $$(git rev-list --tags --max-count=1))
         git checkout $$LATEST_TAG
-  - name: golang:1.25.5
+  - name: golang:1.26
     id: zip-code
     entrypoint: /bin/bash
     args:
@@ -64,7 +64,7 @@ steps:
     env: ["PROJECT_ID=$PROJECT_ID", "TEST_RUN_ID=$BUILD_ID"]
     args:
       - cloud-functions-gen2
-      - --runtime=go125
+      - --runtime=go126
       - --functionsource=/workspace/opentelemetry-operations-go/e2e-test-server/cloud_functions/function-source.zip
       - --entrypoint=HandleCloudFunction
       - --skip-cleanup
