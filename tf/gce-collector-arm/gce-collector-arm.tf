@@ -28,7 +28,10 @@ resource "google_compute_instance" "default" {
 
   metadata = {
     google-logging-enabled    = "true"
-    startup-script = data.template_file.default.rendered
+    startup-script = templatefile("./startup_script.sh", {
+      image  = var.image
+      config = jsonencode(module.otel_config.config)
+    })
   }
 
   network_interface {
@@ -43,14 +46,6 @@ resource "google_compute_instance" "default" {
 
   service_account {
     scopes = ["cloud-platform"]
-  }
-}
-
-data "template_file" "default" {
-  template = file("./startup_script.sh")
-  vars = {
-    image = var.image
-    config = jsonencode(module.otel_config.config)
   }
 }
 
