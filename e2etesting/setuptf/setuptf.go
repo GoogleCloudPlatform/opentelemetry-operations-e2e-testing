@@ -15,12 +15,16 @@
 package setuptf
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 )
 
 const (
@@ -59,6 +63,33 @@ func runWithOutput(cmd *exec.Cmd, logger *log.Logger) error {
 	return nil
 }
 
+// ErrStockout means terraform apply failed because GCE had no capacity left
+// for the requested resources in the requested zone. Another zone may work.
+var ErrStockout = errors.New("GCE has no capacity for this request in this zone")
+
+// stockoutRe matches the errors GCE returns when a zone is out of capacity.
+// GCE words these errors in several ways, see
+// https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-resource-availability
+var stockoutRe = regexp.MustCompile(`ZONE_RESOURCE_POOL_EXHAUSTED|STOCKOUT|does not have enough resources available|VM instance is currently unavailable`)
+
+// runApply runs a terraform apply command like runWithOutput, but also keeps a
+// copy of stderr, where terraform prints errors. If the apply failed because
+// of a GCE stockout, the returned error wraps ErrStockout.
+func runApply(cmd *exec.Cmd, logger *log.Logger) error {
+	var stderr bytes.Buffer
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = io.MultiWriter(&stderr, os.Stderr)
+	logger.Printf("Running command: %v\n", cmd)
+	if err := cmd.Run(); err != nil {
+		logger.Println(err)
+		if stockoutRe.Match(stderr.Bytes()) {
+			return fmt.Errorf("%w: %w", ErrStockout, err)
+		}
+		return err
+	}
+	return nil
+}
+
 func initCommand(ctx context.Context, projectID string) *exec.Cmd {
 	return exec.CommandContext(
 		ctx,
@@ -76,6 +107,9 @@ func initCommand(ctx context.Context, projectID string) *exec.Cmd {
 // 2. Create a new terraform workspace for the test run ID
 // 3. Run terraform apply
 // 4. Get output results from terraform output
+//
+// If terraform apply fails because of a GCE stockout, the returned error wraps
+// ErrStockout, so callers can retry in another zone.
 //
 // Cleanup method runs terraform destroy and then deletes the workspace.
 func SetupTf(
@@ -119,7 +153,7 @@ func SetupTf(
 	)
 	cmd.Args = append(cmd.Args, tfVarArgs...)
 	cmd.Dir = tfDir
-	if err := runWithOutput(cmd, logger); err != nil {
+	if err := runApply(cmd, logger); err != nil {
 		return nil, err
 	}
 

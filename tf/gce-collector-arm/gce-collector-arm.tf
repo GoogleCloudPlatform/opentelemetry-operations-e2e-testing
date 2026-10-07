@@ -17,6 +17,7 @@ resource "google_compute_instance" "default" {
   # can use to get unique resource names.
   name                      = "e2etest-${terraform.workspace}"
   machine_type              = "c4a-standard-1"
+  zone                      = var.zone
   allow_stopping_for_update = true
 
   boot_disk {
@@ -56,6 +57,12 @@ module "otel_config" {
 
 variable "image" {
   type = string
+}
+
+variable "zone" {
+  description = "Zone for the VM. The test runner tries other zones when this one has no capacity."
+  type        = string
+  default     = "us-central1-a"
 }
 
 

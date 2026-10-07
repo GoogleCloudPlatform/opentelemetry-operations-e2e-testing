@@ -16,6 +16,8 @@ package e2etestrunner_collector
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 
 	"github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/e2etesting"
@@ -24,8 +26,13 @@ import (
 
 const gceCollectorArmTfDir string = "tf/gce-collector-arm"
 
+// gceCollectorArmZones are the zones to try for the C4A VM, in order. A
+// stockout can cover a whole region, so each zone is in a different region.
+var gceCollectorArmZones = []string{"us-east1-b", "us-west1-a", "us-east4-a", "us-central1-a"}
+
 // SetupGceCollectorArm Set up the collector to run in GCE arm container. Creates a new
-// GCE VM resources, and runs the specified container image. The
+// GCE VM resources, and runs the specified container image. If a zone has no
+// capacity for the VM, it tries the next one in gceCollectorArmZones. The
 // returned cleanup function tears down the VM.
 func SetupGceCollectorArm(
 	ctx context.Context,
@@ -35,15 +42,23 @@ func SetupGceCollectorArm(
 	cleanup := func() {
 		setuptf.CleanupTf(ctx, args.ProjectID, args.TestRunID, logger)
 	}
-	_, err := setuptf.SetupTf(
-		ctx,
-		args.ProjectID,
-		args.TestRunID,
-		gceCollectorArmTfDir,
-		map[string]string{
-			"image": args.GceCollectorArm.Image,
-		},
-		logger,
-	)
-	return cleanup, err
+	for _, zone := range gceCollectorArmZones {
+		_, err := setuptf.SetupTf(
+			ctx,
+			args.ProjectID,
+			args.TestRunID,
+			gceCollectorArmTfDir,
+			map[string]string{
+				"image": args.GceCollectorArm.Image,
+				"zone":  zone,
+			},
+			logger,
+		)
+		if !errors.Is(err, setuptf.ErrStockout) {
+			// Either it worked, or it failed in a way another zone won't fix.
+			return cleanup, err
+		}
+		logger.Printf("No capacity for the VM in %s\n", zone)
+	}
+	return cleanup, fmt.Errorf("no capacity for the VM in any of %v: %w", gceCollectorArmZones, setuptf.ErrStockout)
 }
