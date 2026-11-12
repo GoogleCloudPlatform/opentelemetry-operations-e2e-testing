@@ -19,20 +19,21 @@ resource "google_compute_instance" "default" {
   machine_type              = "e2-micro"
   allow_stopping_for_update = true
 
-  labels = merge(
-    local.common_labels,
-    { container-vm = module.gce_container.vm_container_label },
-  )
+  labels = local.common_labels
 
   boot_disk {
     initialize_params {
-      image = module.gce_container.source_image
+      image = "projects/cos-cloud/global/images/family/cos-stable"
     }
   }
 
   metadata = {
-    gce-container-declaration = module.gce_container.metadata_value
-    google-logging-enabled    = "true"
+    google-logging-enabled = "true"
+    startup-script = templatefile("./startup_script.sh", {
+      image      = var.image
+      registries = join(",", distinct([split("/", var.image)[0], "us-docker.pkg.dev", "us-central1-docker.pkg.dev", "gcr.io"]))
+      config     = jsonencode(module.otel_config.config)
+    })
   }
 
   network_interface {
@@ -47,22 +48,6 @@ resource "google_compute_instance" "default" {
 
   service_account {
     scopes = ["cloud-platform"]
-  }
-}
-
-module "gce_container" {
-  source  = "terraform-google-modules/container-vm/google"
-  version = "2.0.0"
-
-  container = {
-    image = var.image
-    args = ["--config=env:OTEL_CONFIG"]
-    env = [
-      {
-        name = "OTEL_CONFIG"
-        value = jsonencode(module.otel_config.config)
-      }
-    ]
   }
 }
 

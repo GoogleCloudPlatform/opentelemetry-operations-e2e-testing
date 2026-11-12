@@ -19,20 +19,24 @@ resource "google_compute_instance" "default" {
   machine_type              = "e2-micro"
   allow_stopping_for_update = true
 
-  labels = merge(
-    local.common_labels,
-    { container-vm = module.gce_container.vm_container_label },
-  )
+  labels = local.common_labels
 
   boot_disk {
     initialize_params {
-      image = module.gce_container.source_image
+      image = "projects/cos-cloud/global/images/family/cos-stable"
     }
   }
 
   metadata = {
-    gce-container-declaration = module.gce_container.metadata_value
-    google-logging-enabled    = "true"
+    google-logging-enabled = "true"
+    startup-script = templatefile("./startup_script.sh", {
+      image                     = var.image
+      registries                = join(",", distinct([split("/", var.image)[0], "us-docker.pkg.dev", "us-central1-docker.pkg.dev", "gcr.io"]))
+      project_id                = var.project_id
+      request_subscription_name = module.pubsub.info.request_topic.subscription_name
+      response_topic_name       = module.pubsub.info.response_topic.topic_name
+      subscription_mode         = "pull"
+    })
   }
 
   network_interface {
@@ -47,34 +51,6 @@ resource "google_compute_instance" "default" {
 
   service_account {
     scopes = ["cloud-platform"]
-  }
-}
-
-module "gce_container" {
-  source  = "terraform-google-modules/container-vm/google"
-  version = "2.0.0"
-
-  container = {
-    image = var.image
-
-    env = [
-      {
-        name  = "PROJECT_ID"
-        value = var.project_id
-      },
-      {
-        name  = "REQUEST_SUBSCRIPTION_NAME"
-        value = module.pubsub.info.request_topic.subscription_name
-      },
-      {
-        name  = "RESPONSE_TOPIC_NAME"
-        value = module.pubsub.info.response_topic.topic_name
-      },
-      {
-        name  = "SUBSCRIPTION_MODE"
-        value = "pull"
-      }
-    ]
   }
 }
 
