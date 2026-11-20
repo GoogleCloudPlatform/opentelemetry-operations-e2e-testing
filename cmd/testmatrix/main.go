@@ -108,6 +108,7 @@ var (
 		"local",
 		"gke",
 		"gce",
+		"gce-mig",
 		"gae",
 		"gae-standard",
 		"cloud-run",
