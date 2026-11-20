@@ -40,10 +40,11 @@ steps:
     args:
       - '-c'
       - |
+        # TODO: switch back to LATEST_TAG after next opentelemetry-operations-go release
         git clone https://github.com/GoogleCloudPlatform/opentelemetry-operations-go.git
         cd opentelemetry-operations-go
-        LATEST_TAG=$$(git describe --tags $$(git rev-list --tags --max-count=1))
-        git checkout $$LATEST_TAG
+        git fetch origin pull/1224/head
+        git checkout FETCH_HEAD
   - name: golang:1.26
     id: zip-code
     entrypoint: /bin/bash
