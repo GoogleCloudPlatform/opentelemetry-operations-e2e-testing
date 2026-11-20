@@ -48,6 +48,10 @@ func TestMain(m *testing.M) {
 		setupFunc = SetupGke
 	case args.CloudRun != nil:
 		setupFunc = SetupCloudRun
+	case args.CloudRunWorkerPool != nil:
+		setupFunc = SetupCloudRunWorkerPool
+	case args.CloudRunInstance != nil:
+		setupFunc = SetupCloudRunInstance
 	case args.CloudFunctionsGen2 != nil:
 		setupFunc = SetupCloudFunctionsGen2
 	case args.Gae != nil:

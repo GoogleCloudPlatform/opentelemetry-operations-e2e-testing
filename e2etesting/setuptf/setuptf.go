@@ -67,10 +67,10 @@ func runWithOutput(cmd *exec.Cmd, logger *log.Logger) error {
 // for the requested resources in the requested zone. Another zone may work.
 var ErrStockout = errors.New("GCE has no capacity for this request in this zone")
 
-// stockoutRe matches the errors GCE returns when a zone is out of capacity.
+// stockoutRe matches the errors GCP returns when a zone or region is out of capacity.
 // GCE words these errors in several ways, see
 // https://cloud.google.com/compute/docs/troubleshooting/troubleshooting-resource-availability
-var stockoutRe = regexp.MustCompile(`ZONE_RESOURCE_POOL_EXHAUSTED|STOCKOUT|does not have enough resources available|VM instance is currently unavailable`)
+var stockoutRe = regexp.MustCompile(`ZONE_RESOURCE_POOL_EXHAUSTED|REGION_CAPACITY_EXHAUSTED|STOCKOUT|does not have enough resources available|VM instance is currently unavailable`)
 
 // runApply runs a terraform apply command like runWithOutput, but also keeps a
 // copy of stderr, where terraform prints errors. If the apply failed because
