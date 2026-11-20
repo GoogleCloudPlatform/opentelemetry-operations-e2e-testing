@@ -111,6 +111,8 @@ var (
 		"gae",
 		"gae-standard",
 		"cloud-run",
+		"cloud-run-worker-pool",
+		"cloud-run-instance",
 		"cloud-functions-gen2",
 	}
 )

@@ -94,6 +94,14 @@ type CloudRunCmd struct {
 	CmdWithImage
 }
 
+type CloudRunWorkerPoolCmd struct {
+	CmdWithImage
+}
+
+type CloudRunInstanceCmd struct {
+	CmdWithImage
+}
+
 type CloudRunCollectorCmd struct {
 	CmdWithImage
 }
@@ -127,6 +135,8 @@ type Args struct {
 	Gae                  *GaeCmd                  `arg:"subcommand:gae" help:"Deploy the test server on GAE and execute tests"`
 	GaeStandard          *GaeStandardCmd          `arg:"subcommand:gae-standard" help:"Deploy the test server on GAE standard and execute tests"`
 	CloudRun             *CloudRunCmd             `arg:"subcommand:cloud-run" help:"Deploy the test server on Cloud Run and execute tests"`
+	CloudRunWorkerPool   *CloudRunWorkerPoolCmd   `arg:"subcommand:cloud-run-worker-pool" help:"Deploy the test server on a Cloud Run worker pool and execute tests"`
+	CloudRunInstance     *CloudRunInstanceCmd     `arg:"subcommand:cloud-run-instance" help:"Deploy the test server on a Cloud Run instance and execute tests"`
 	CloudRunCollector    *CloudRunCollectorCmd    `arg:"subcommand:cloud-run-collector" help:"Deploy the collector on Cloud Run and execute tests"`
 	CloudFunctionsGen2   *CloudFunctionsGen2Cmd   `arg:"subcommand:cloud-functions-gen2" help:"Deploy the test server on Cloud Function (2nd Gen) and execute tests"`
 
