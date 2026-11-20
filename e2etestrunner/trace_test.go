@@ -240,6 +240,29 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "cloud.availability_zone", expectRe: `.*-.*-.*`},
 			labelExpectation{expectKey: "host.id", expectRe: `.*`},
 		)
+	case args.GceMig != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_compute_engine`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{expectKey: "cloud.availability_zone", expectRe: `.*-.*-.*`},
+			labelExpectation{expectKey: "host.id", expectRe: `.*`},
+			labelExpectation{expectKey: "gcp.gce.instance.name", expectRe: `^e2etest-mig-.*`},
+			labelExpectation{expectKey: "gcp.gce.instance.hostname", expectRe: `.*`},
+			labelExpectation{
+				expectKey: "gcp.gce.instance_group_manager.name",
+				expectRe:  `^` + regexp.QuoteMeta("e2etest-mig-"+args.TestRunID) + `$`,
+			},
+		)
+		if args.GceMig.Regional {
+			labelCases = append(labelCases,
+				labelExpectation{expectKey: "gcp.gce.instance_group_manager.region", expectRe: `.*-.*`},
+			)
+		} else {
+			labelCases = append(labelCases,
+				labelExpectation{expectKey: "gcp.gce.instance_group_manager.zone", expectRe: `.*-.*-.*`},
+			)
+		}
 	case args.Gke != nil:
 		labelCases = append(labelCases,
 			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
@@ -269,7 +292,10 @@ func TestResourceDetectionTrace(t *testing.T) {
 	case args.CloudFunctionsGen2 != nil:
 		labelCases = append(labelCases,
 			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
-			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_cloud_functions`},
+			// Cloud Functions (2nd gen) runs on Cloud Run and sets both K_CONFIGURATION
+			// and FUNCTION_TARGET. Accept both values while detectors transition from
+			// gcp_cloud_functions to gcp_cloud_run.
+			labelExpectation{expectKey: "cloud.platform", expectRe: `^(gcp_cloud_run|gcp_cloud_functions)$`},
 			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
 			labelExpectation{expectKey: "faas.name", expectRe: `.*`},
 			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
@@ -315,6 +341,13 @@ func TestResourceDetectionTrace(t *testing.T) {
 				tc.expectRe,
 			)
 		})
+	}
+	if args.GceMig != nil {
+		if args.GceMig.Regional {
+			assert.NotContains(t, span.Labels, "gcp.gce.instance_group_manager.zone")
+		} else {
+			assert.NotContains(t, span.Labels, "gcp.gce.instance_group_manager.region")
+		}
 	}
 }
 

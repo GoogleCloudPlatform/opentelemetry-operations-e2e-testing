@@ -58,6 +58,12 @@ type GceCmd struct {
 	CmdWithImage
 }
 
+type GceMigCmd struct {
+	CmdWithImage
+
+	Regional bool `arg:"--regional" default:"false" help:"Create a regional MIG instead of a zonal MIG"`
+}
+
 type GceCollectorCmd struct {
 	CmdWithImage
 }
@@ -120,6 +126,7 @@ type Args struct {
 	Local                *LocalCmd                `arg:"subcommand:local" help:"Deploy the test server locally with docker and execute tests"`
 	Gke                  *GkeCmd                  `arg:"subcommand:gke" help:"Deploy the test server on GKE and execute tests"`
 	Gce                  *GceCmd                  `arg:"subcommand:gce" help:"Deploy the test server on GCE and execute tests"`
+	GceMig               *GceMigCmd               `arg:"subcommand:gce-mig" help:"Deploy the test server on a GCE Managed Instance Group and execute tests"`
 	GceCollector         *GceCollectorCmd         `arg:"subcommand:gce-collector" help:"Deploy the collector on GCE and execute tests"`
 	GceCollectorArm      *GceCollectorArmCmd      `arg:"subcommand:gce-collector-arm" help:"Deploy the collector on GCE and execute tests"`
 	GkeCollector         *GkeCollectorCmd         `arg:"subcommand:gke-collector" help:"Deploy the collector on GKE and execute tests"`
