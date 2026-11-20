@@ -37,14 +37,9 @@ resource "google_app_engine_flexible_app_version" "test_service" {
     path = "/ready"
   }
 
-  // Limit resources and QPS
-  automatic_scaling {
-    max_concurrent_requests = 5
-    cpu_utilization {
-      target_utilization = 0.9
-    }
-    max_total_instances = 1
-    min_total_instances = 0
+  // Keep a single instance running for Pub/Sub pull with no inbound HTTP traffic
+  manual_scaling {
+    instances = 1
   }
 
   env_variables = {
@@ -52,7 +47,7 @@ resource "google_app_engine_flexible_app_version" "test_service" {
     "REQUEST_SUBSCRIPTION_NAME" = module.pubsub.info.request_topic.subscription_name,
     "RESPONSE_TOPIC_NAME"       = module.pubsub.info.response_topic.topic_name,
     "PROJECT_ID"                = var.project_id,
-    "SUBSCRIPTION_MODE"         = "push"
+    "SUBSCRIPTION_MODE"         = "pull"
   }
 
   noop_on_destroy           = false
@@ -60,18 +55,17 @@ resource "google_app_engine_flexible_app_version" "test_service" {
   service_account           = "${var.project_id}@appspot.gserviceaccount.com"
 }
 
+resource "google_app_engine_service_network_settings" "test_service" {
+  service = google_app_engine_flexible_app_version.test_service.service
+  network_settings {
+    ingress_traffic_allowed = "INGRESS_TRAFFIC_ALLOWED_INTERNAL_ONLY"
+  }
+}
+
 module "pubsub" {
   source = "../modules/pubsub"
 
   project_id = var.project_id
-}
-
-module "pubsub-push-subscription" {
-  source = "../modules/pubsub-push-subscription"
-
-  project_id    = var.project_id
-  topic         = module.pubsub.info.request_topic.topic_name
-  push_endpoint = "https://${google_app_engine_flexible_app_version.test_service.service}-dot-${var.project_id}.uc.r.appspot.com/"
 }
 
 variable "image" {

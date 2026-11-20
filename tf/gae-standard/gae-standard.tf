@@ -37,12 +37,10 @@ resource "google_app_engine_standard_app_version" "test_service" {
     shell = var.entrypoint
   }
 
-  // Limit resources and QPS
-  automatic_scaling {
-    max_concurrent_requests = 5
-    standard_scheduler_settings {
-      max_instances = 1
-    }
+  // Manual scaling (B1) keeps 1 instance alive without CPU throttling for Pub/Sub pull
+  instance_class = "B1"
+  manual_scaling {
+    instances = 1
   }
 
   env_variables = {
@@ -50,11 +48,18 @@ resource "google_app_engine_standard_app_version" "test_service" {
     "REQUEST_SUBSCRIPTION_NAME" = module.pubsub.info.request_topic.subscription_name,
     "RESPONSE_TOPIC_NAME"       = module.pubsub.info.response_topic.topic_name,
     "PROJECT_ID"                = var.project_id,
-    "SUBSCRIPTION_MODE"         = "push"
+    "SUBSCRIPTION_MODE"         = "pull"
   }
 
   noop_on_destroy           = false
   delete_service_on_destroy = true
+}
+
+resource "google_app_engine_service_network_settings" "test_service" {
+  service = google_app_engine_standard_app_version.test_service.service
+  network_settings {
+    ingress_traffic_allowed = "INGRESS_TRAFFIC_ALLOWED_INTERNAL_ONLY"
+  }
 }
 
 resource "google_storage_bucket" "bucket" {
@@ -74,14 +79,6 @@ module "pubsub" {
   source = "../modules/pubsub"
 
   project_id = var.project_id
-}
-
-module "pubsub-push-subscription" {
-  source = "../modules/pubsub-push-subscription"
-
-  project_id    = var.project_id
-  topic         = module.pubsub.info.request_topic.topic_name
-  push_endpoint = "https://${google_app_engine_standard_app_version.test_service.service}-dot-${var.project_id}.uc.r.appspot.com/"
 }
 
 variable "appsource" {
