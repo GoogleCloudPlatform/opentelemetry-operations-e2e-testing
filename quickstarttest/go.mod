@@ -2,7 +2,6 @@ module github.com/GoogleCloudPlatform/opentelemetry-operations-e2e-testing/quick
 
 go 1.24.9
 
-
 require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.67.4
@@ -110,7 +109,7 @@ require (
 	github.com/moby/go-archive v0.1.0 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
-	github.com/moby/spdystream v0.5.0 // indirect
+	github.com/moby/spdystream v0.5.1 // indirect
 	github.com/moby/sys/atomicwriter v0.1.0 // indirect
 	github.com/moby/sys/capability v0.4.0 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
