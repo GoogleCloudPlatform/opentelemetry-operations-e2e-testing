@@ -15,13 +15,18 @@
 package setuptf
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"testing"
+
+	"google.golang.org/api/option"
 )
 
 // fakeApply returns a command that stands in for terraform apply: it prints
@@ -109,6 +114,88 @@ func TestRunApply(t *testing.T) {
 			}
 			if gotStockout := errors.Is(err, ErrStockout); gotStockout != tc.wantStockout {
 				t.Errorf("errors.Is(err, ErrStockout) = %v, want %v (err: %v)", gotStockout, tc.wantStockout, err)
+			}
+		})
+	}
+}
+
+func TestCleanupTfValidation(t *testing.T) {
+	logger := log.New(io.Discard, "", 0)
+	for _, tc := range []struct {
+		name      string
+		testRunID string
+	}{
+		{name: "empty testRunID", testRunID: ""},
+		{name: "whitespace testRunID", testRunID: "   "},
+		{name: "default workspace", testRunID: "default"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := CleanupTf(context.Background(), "opentelemetry-ops-e2e", tc.testRunID, logger); err == nil {
+				t.Fatalf("CleanupTf(%q) = nil, want error", tc.testRunID)
+			}
+		})
+	}
+}
+
+func TestGcsWorkspaceExists(t *testing.T) {
+	const (
+		projectID = "opentelemetry-ops-e2e"
+		testRunID = "1ed8a373-891d-440c-825e-4d549d001e5f"
+		wantPath  = "/b/opentelemetry-ops-e2e-e2e-tfstate/o/terraform%2Fstate%2F1ed8a373-891d-440c-825e-4d549d001e5f.tfstate"
+	)
+
+	for _, tc := range []struct {
+		name       string
+		statusCode int
+		body       string
+		wantExists bool
+		wantErr    bool
+	}{
+		{
+			name:       "200 returns true",
+			statusCode: http.StatusOK,
+			body:       `{"bucket":"opentelemetry-ops-e2e-e2e-tfstate","name":"terraform/state/1ed8a373-891d-440c-825e-4d549d001e5f.tfstate"}`,
+			wantExists: true,
+		},
+		{
+			name:       "404 returns false without error",
+			statusCode: http.StatusNotFound,
+			body:       `{"error":{"code":404,"message":"No such object"}}`,
+			wantExists: false,
+		},
+		{
+			name:       "403 returns error",
+			statusCode: http.StatusForbidden,
+			body:       `{"error":{"code":403,"message":"Forbidden"}}`,
+			wantErr:    true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var gotPath string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotPath = r.URL.EscapedPath()
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(tc.statusCode)
+				_, _ = io.WriteString(w, tc.body)
+			}))
+			defer srv.Close()
+
+			exists, err := gcsWorkspaceExists(
+				context.Background(),
+				projectID,
+				testRunID,
+				option.WithEndpoint(srv.URL),
+				option.WithoutAuthentication(),
+				option.WithHTTPClient(srv.Client()),
+			)
+			if gotPath != wantPath {
+				t.Errorf("GCS request path = %q, want %q", gotPath, wantPath)
+			}
+			if gotErr := err != nil; gotErr != tc.wantErr {
+				t.Fatalf("gcsWorkspaceExists() error = %v, wantErr = %v", err, tc.wantErr)
+			}
+			if exists != tc.wantExists {
+				t.Errorf("gcsWorkspaceExists() = %v, want %v", exists, tc.wantExists)
 			}
 		})
 	}

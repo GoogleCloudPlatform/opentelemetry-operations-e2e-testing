@@ -33,6 +33,7 @@ terraform {
     # -backend-config="bucket=$PROJECT_ID-e2e-tfstate"
 
     # bucket  = "${var.project_id}-e2e-tfstate"
+    # Keep in sync with tfStatePrefix in e2etesting/setuptf/setuptf.go.
     prefix = "terraform/state"
   }
 }
