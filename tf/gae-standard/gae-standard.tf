@@ -24,6 +24,10 @@ resource "google_app_engine_standard_app_version" "test_service" {
   service    = "standard-${var.runtime}-${substr(replace(terraform.workspace, "-", ""), 0, 12)}"
   runtime    = var.runtime
 
+  timeouts {
+    create = "8m"
+  }
+
   deployment {
     zip {
       // The object's media_link does not work, GAE requires this format

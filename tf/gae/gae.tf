@@ -23,6 +23,10 @@ resource "google_app_engine_flexible_app_version" "test_service" {
   service    = "flex-${var.runtime}-${substr(replace(terraform.workspace, "-", ""), 0, 12)}"
   runtime    = "custom"
 
+  timeouts {
+    create = "8m"
+  }
+
   deployment {
     container {
       image = var.image
