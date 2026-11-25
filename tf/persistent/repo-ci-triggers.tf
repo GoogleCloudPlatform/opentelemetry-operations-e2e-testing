@@ -92,3 +92,59 @@ resource "google_cloudbuild_trigger" "global_cleanup" {
     _BUILD_STATUS      = "$(body.message.data.status)"
   }
 }
+
+resource "google_pubsub_topic" "e2e_workspace_reaper" {
+  name    = "e2e-workspace-reaper"
+  project = var.project_id
+}
+
+resource "google_cloud_scheduler_job" "e2e_workspace_reaper" {
+  name        = "e2e-workspace-reaper"
+  description = "Periodically triggers cleanup of stale E2E Terraform workspaces"
+  project     = var.project_id
+  region      = "us-central1"
+  # Run once a day at 06:00 UTC
+  schedule  = "0 6 * * *"
+  time_zone = "Etc/UTC"
+
+  pubsub_target {
+    topic_name = google_pubsub_topic.e2e_workspace_reaper.id
+    # Pub/Sub requires non-empty data or attributes; the trigger ignores the body.
+    data = base64encode("{}")
+  }
+}
+
+resource "google_cloudbuild_trigger" "e2e_workspace_reaper" {
+  name            = "e2e-workspace-reaper"
+  description     = "Scans GCS state for stale (>24h) ephemeral E2E Terraform workspaces, clears stale locks, and enqueues teardown via the e2e-cleanup Pub/Sub topic"
+  project         = var.project_id
+  service_account = local.service_account_email
+
+  pubsub_config {
+    topic = google_pubsub_topic.e2e_workspace_reaper.id
+  }
+
+  build {
+    timeout = "600s"
+    step {
+      name       = "$_TEST_RUNNER_IMAGE"
+      entrypoint = "/cleanupworkspaces"
+      args = [
+        "--project-id=${var.project_id}",
+        "--image=$_TEST_RUNNER_IMAGE",
+        "--pubsub-topic=${google_pubsub_topic.e2e_cleanup.name}",
+        "--min-age=24h",
+        "--limit=20",
+        "--execute",
+      ]
+      dir = "/"
+    }
+    options {
+      logging = "CLOUD_LOGGING_ONLY"
+    }
+  }
+
+  substitutions = {
+    _TEST_RUNNER_IMAGE = "us-central1-docker.pkg.dev/${var.project_id}/e2e-testing/opentelemetry-operations-e2e-testing:latest"
+  }
+}

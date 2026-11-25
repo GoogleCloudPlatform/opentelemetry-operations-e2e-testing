@@ -22,8 +22,9 @@ RUN go mod download
 
 COPY . .
 RUN set -x; if [ "$BUILD_TAGS" = "e2ecollector" ]; then BUILD_DIRECTORY="e2etestrunner_collector"; else BUILD_TAGS="e2e"; BUILD_DIRECTORY="e2etestrunner"; fi; CGO_ENABLED=0 go test -timeout 3600s -tags=$BUILD_TAGS -c "./$BUILD_DIRECTORY" -o opentelemetry-operations-e2e-testing.test
+RUN CGO_ENABLED=0 go build -o /src/cleanupworkspaces ./cmd/cleanupworkspaces
 
-FROM hashicorp/terraform:1.13 as tfbuild
+FROM hashicorp/terraform:1.13 AS tfbuild
 COPY tf /src/tf
 WORKDIR /src/tf
 ENV TF_PLUGIN_CACHE_DIR=/src/tf/terraform-plugin-cache
@@ -33,6 +34,7 @@ RUN for dir in */; do (cd $dir && terraform init -backend=false); done
 FROM alpine:3.14
 RUN apk --update add ca-certificates git
 COPY --from=gobuild /src/opentelemetry-operations-e2e-testing.test /opentelemetry-operations-e2e-testing.test
+COPY --from=gobuild /src/cleanupworkspaces /cleanupworkspaces
 COPY --from=tfbuild /src/tf /tf
 COPY --from=tfbuild /bin/terraform /bin/terraform
 ENV TF_PLUGIN_CACHE_DIR=/tf/terraform-plugin-cache
