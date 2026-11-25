@@ -108,7 +108,7 @@ func TestLogging(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf(fmt.Sprintf("Could not find any logs matching filter %s: %v", filter, err))
+		t.Fatalf("Could not find any logs matching filter %s: %v", filter, err)
 	}
 	fmt.Println(fmt.Sprintf("Entry found: %v", entry))
 }
@@ -128,7 +128,7 @@ func TestTraces(t *testing.T) {
 	}
 	tracesFound := len(resp.Traces)
 	if tracesFound == 0 {
-		t.Errorf(fmt.Sprintf("Could not find traces with resource attribute: %s", resourceFilter))
+		t.Errorf("Could not find traces with resource attribute: %s", resourceFilter)
 	}
 	fmt.Println(fmt.Sprintf("Found traces with resource attribute%s", resourceFilter))
 }
