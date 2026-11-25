@@ -14,8 +14,10 @@
 
 resource "google_compute_instance_template" "default" {
   # The terraform workspace will be given a random name (test run id) which we
-  # can use to get unique resource names.
-  name         = "e2etest-mig-${terraform.workspace}"
+  # can use to get unique resource names. Use name_prefix (truncated to stay
+  # within Terraform's 37-char limit for 63-char GCE names) so
+  # create_before_destroy does not collide on replacement.
+  name_prefix  = "e2etest-mig-${substr(replace(lower(terraform.workspace), "-", ""), 0, 12)}-"
   machine_type = "e2-micro"
 
   labels = local.common_labels
