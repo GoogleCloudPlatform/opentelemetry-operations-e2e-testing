@@ -25,13 +25,21 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
+	"time"
+
+	"cloud.google.com/go/storage"
+	"google.golang.org/api/option"
 )
 
 const (
-	tfPersistentDir                           = "tf/persistent"
-	tfPersistentCollectorDir                  = "tf/persistent-collector"
-	Push                     SubscriptionMode = "push"
-	Pull                     SubscriptionMode = "pull"
+	tfPersistentDir          = "tf/persistent"
+	tfPersistentCollectorDir = "tf/persistent-collector"
+	// Must stay in sync with backend "gcs" prefix in tf/common/main-common.tf.
+	tfStatePrefix                            = "terraform/state"
+	gcsCheckTimeout                          = 30 * time.Second
+	Push                    SubscriptionMode = "push"
+	Pull                    SubscriptionMode = "pull"
 )
 
 type SubscriptionMode string
@@ -90,13 +98,17 @@ func runApply(cmd *exec.Cmd, logger *log.Logger) error {
 	return nil
 }
 
+func tfStateBucket(projectID string) string {
+	return fmt.Sprintf("%v-e2e-tfstate", projectID)
+}
+
 func initCommand(ctx context.Context, projectID string) *exec.Cmd {
 	return exec.CommandContext(
 		ctx,
 		"terraform",
 		"init",
 		"-input=false",
-		fmt.Sprintf("-backend-config=bucket=%v-e2e-tfstate", projectID),
+		fmt.Sprintf("-backend-config=bucket=%v", tfStateBucket(projectID)),
 	)
 }
 
@@ -271,13 +283,56 @@ func tfVarMapToArgs(
 	return tfVarArgs
 }
 
-// CleanupTf runs terraform destroy and deletes the workspace.
+// gcsWorkspaceExists checks whether the Terraform workspace still exists by
+// reading the GCS backend state object. Note that GCS maps any HTTP 404
+// (including a nonexistent bucket) to storage.ErrObjectNotExist.
+func gcsWorkspaceExists(ctx context.Context, projectID, testRunID string, opts ...option.ClientOption) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, gcsCheckTimeout)
+	defer cancel()
+
+	client, err := storage.NewClient(ctx, opts...)
+	if err != nil {
+		return false, fmt.Errorf("creating storage client: %w", err)
+	}
+	defer client.Close()
+
+	bucket := tfStateBucket(projectID)
+	object := fmt.Sprintf("%s/%s.tfstate", tfStatePrefix, testRunID)
+	_, err = client.Bucket(bucket).Object(object).Attrs(ctx)
+	if errors.Is(err, storage.ErrObjectNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("checking terraform state object gs://%s/%s: %w", bucket, object, err)
+	}
+	return true, nil
+}
+
+// CleanupTf destroys resources and deletes the Terraform workspace. If the
+// workspace does not exist, it is a no-op and returns nil.
 func CleanupTf(
 	ctx context.Context,
 	projectID string,
 	testRunID string,
 	logger *log.Logger,
 ) error {
+	if strings.TrimSpace(testRunID) == "" {
+		return errors.New("testRunID is required for cleanup")
+	}
+	if testRunID == "default" {
+		return errors.New("refusing to clean up default terraform workspace")
+	}
+
+	exists, err := gcsWorkspaceExists(ctx, projectID, testRunID)
+	if err != nil {
+		logger.Printf("error checking if terraform workspace %s exists: %v", testRunID, err)
+		return err
+	}
+	if !exists {
+		logger.Printf("Terraform workspace %s does not exist; skipping cleanup", testRunID)
+		return nil
+	}
+
 	const tfDir = "tf/destroy"
 	tfVarArgs := []string{fmt.Sprintf("-var=project_id=%s", projectID)}
 	cmd := initCommand(ctx, projectID)
