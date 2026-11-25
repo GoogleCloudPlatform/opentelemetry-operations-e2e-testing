@@ -108,6 +108,8 @@ var (
 		"local",
 		"gke",
 		"gce",
+		"gce-mig",
+		"gce-mig-regional",
 		"gae",
 		"gae-standard",
 		"cloud-run",

@@ -44,6 +44,8 @@ func TestMain(m *testing.M) {
 		setupFunc = SetupLocal
 	case args.Gce != nil:
 		setupFunc = SetupGce
+	case args.GceMig != nil:
+		setupFunc = SetupGceMig
 	case args.Gke != nil:
 		setupFunc = SetupGke
 	case args.CloudRun != nil:
