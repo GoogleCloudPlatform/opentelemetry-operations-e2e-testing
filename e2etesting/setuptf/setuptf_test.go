@@ -80,6 +80,13 @@ func TestRunApply(t *testing.T) {
 			wantStockout: true,
 		},
 		{
+			name:         "cloud run instance region capacity exhausted",
+			stderr:       `Error: Error creating Instance: googleapi: Error 400: Instance capacity in region us-central1 is currently exhausted. Please pick a different region. reason: "REGION_CAPACITY_EXHAUSTED"`,
+			exitCode:     1,
+			wantErr:      true,
+			wantStockout: true,
+		},
+		{
 			name:     "other failure",
 			stderr:   "Error: Error creating instance: googleapi: Error 403: Required 'compute.instances.create' permission for 'projects/my-project/zones/us-central1-a/instances/e2etest-123', forbidden",
 			exitCode: 1,

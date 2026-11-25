@@ -266,6 +266,43 @@ func TestResourceDetectionTrace(t *testing.T) {
 			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
 			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
 		)
+	case args.CloudRunWorkerPool != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_cloud_run`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{
+				expectKey: "faas.name",
+				expectRe:  `^` + regexp.QuoteMeta("e2etest-wp-"+args.TestRunID) + `$`,
+			},
+			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
+			labelExpectation{expectKey: "faas.version", expectRe: `.*`},
+			labelExpectation{
+				expectKey: "cloud.resource_id",
+				expectRe: `^` +
+					regexp.QuoteMeta("//run.googleapis.com/projects/"+args.ProjectID+"/locations/") +
+					`[^/]+` +
+					regexp.QuoteMeta("/workerPools/e2etest-wp-"+args.TestRunID) + `$`,
+			},
+		)
+	case args.CloudRunInstance != nil:
+		labelCases = append(labelCases,
+			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
+			labelExpectation{expectKey: "cloud.platform", expectRe: `gcp_cloud_run`},
+			labelExpectation{expectKey: "cloud.region", expectRe: `.*-.*`},
+			labelExpectation{
+				expectKey: "faas.name",
+				expectRe:  `^` + regexp.QuoteMeta("e2etest-inst-"+args.TestRunID) + `$`,
+			},
+			labelExpectation{expectKey: "faas.instance", expectRe: `.*`},
+			labelExpectation{
+				expectKey: "cloud.resource_id",
+				expectRe: `^` +
+					regexp.QuoteMeta("//run.googleapis.com/projects/"+args.ProjectID+"/locations/") +
+					`[^/]+` +
+					regexp.QuoteMeta("/instances/e2etest-inst-"+args.TestRunID) + `$`,
+			},
+		)
 	case args.CloudFunctionsGen2 != nil:
 		labelCases = append(labelCases,
 			labelExpectation{expectKey: "cloud.provider", expectRe: `gcp`},
@@ -315,6 +352,9 @@ func TestResourceDetectionTrace(t *testing.T) {
 				tc.expectRe,
 			)
 		})
+	}
+	if args.CloudRunInstance != nil {
+		assert.NotContains(t, span.Labels, "faas.version")
 	}
 }
 
